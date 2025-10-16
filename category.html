@@ -36,7 +36,7 @@
         <nav class="container mx-auto px-4 sm:px-6 lg:px-8"><div class="flex items-center justify-between h-20"><a href="index.html" class="text-3xl font-bold text-white">HD <span class="text-primary">Sports</span></a><div class="flex items-center space-x-4"><div id="auth-container" class="flex items-center space-x-2"></div><button @click="openCart = true" class="relative text-gray-300 hover:text-primary transition-colors duration-200"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg><span x-show="cartTotalItems > 0" x-transition class="absolute -top-2 -right-2 bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center" x-text="cartTotalItems"></span></button></div></div></nav>
     </header>
 
-    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12 min-h-screen">
         <h1 class="text-4xl font-extrabold text-white mb-8">Danh mục: <span class="text-primary" x-text="categoryName"></span></h1>
         
         <div x-show="isLoading" class="text-center text-white text-lg py-20">Đang tải sản phẩm...</div>
@@ -45,14 +45,30 @@
         <div x-show="!isLoading" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
              <template x-for="product in products" :key="product.id">
                 <div @click="openDetailModal(product)" class="bg-slate-800 rounded-lg overflow-hidden shadow-lg card-hover flex flex-col cursor-pointer group">
-                    <div class="relative"><img :src="product.imageUrl" :alt="product.name" class="w-full h-56 object-cover transition-transform duration-300 group-hover:scale-105"><div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center"><div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm"><svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg></div></div></div>
-                    <div class="p-4 flex flex-col flex-grow"><h3 class="text-base font-semibold text-white mt-1 mb-2 flex-grow" x-text="product.name"></h3><div class="mt-4 flex items-center justify-between"><span class="text-lg font-bold text-primary" x-text="formatCurrency(product.price)"></span></div></div>
+                    <div class="relative overflow-hidden">
+                        <img :src="product.imageUrl" :alt="product.name" class="w-full h-60 object-cover transition-transform duration-300 group-hover:scale-105">
+                        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                            <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                                <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                            </div>
+                        </div>
+                        <template x-if="product.discountValue > 0">
+                            <div class="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-md" x-text="product.discountType === 'percent' ? `-${product.discountValue}%` : `-${formatCurrency(product.discountValue)}`"></div>
+                        </template>
+                    </div>
+                    <div class="p-4 flex flex-col flex-grow">
+                        <h3 class="text-base font-semibold text-white mt-1 mb-2 flex-grow" x-text="product.name"></h3>
+                        <div class="mt-4 flex items-center justify-between">
+                            <span class="text-lg font-bold text-primary" x-text="formatCurrency(product.price)"></span>
+                            <span x-show="product.originalPrice > product.price" class="text-sm text-slate-400 line-through" x-text="formatCurrency(product.originalPrice)"></span>
+                        </div>
+                    </div>
                 </div>
             </template>
         </div>
     </main>
 
-    <footer class="bg-slate-900 border-t border-slate-800 mt-20">
+    <footer class="bg-slate-900 border-t border-slate-800">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div><h3 class="text-2xl font-bold text-white">HD <span class="text-primary">Sports</span></h3><p class="text-slate-400 mt-2 text-sm">Cung cấp sản phẩm thể thao chất lượng cao, chính hãng.</p></div>
@@ -72,7 +88,7 @@
             <div x-show="isDetailModalOpen" x-transition.opacity class="fixed inset-0 bg-black/60 backdrop-blur-sm" @click="isDetailModalOpen = false"></div>
             <div x-show="isDetailModalOpen" x-transition class="relative bg-slate-800 border border-slate-700 rounded-lg shadow-xl w-full max-w-4xl m-4 grid grid-cols-1 md:grid-cols-2 gap-8 p-6">
                 <img :src="selectedProduct.imageUrl" :alt="selectedProduct.name" class="w-full h-auto max-h-[70vh] object-cover rounded-lg">
-                <div class="flex flex-col"><h3 class="text-2xl font-bold text-white" x-text="selectedProduct.name"></h3><p class="text-3xl font-bold text-primary mt-2" x-text="formatCurrency(selectedProduct.price)"></p><div class="space-y-4 mt-6"><div x-show="selectedProduct.availableSizes"><p class="font-medium text-slate-300">Size</p><div class="flex flex-wrap gap-2"><template x-for="size in selectedProduct.availableSizes.split(',').map(s => s.trim())" :key="size"><button @click="selectedOptions.Size = size" :class="{'selected': selectedOptions.Size === size}" class="option-btn" x-text="size"></button></template></div></div><div x-show="selectedProduct.availableColors"><p class="font-medium text-slate-300">Màu sắc</p><div class="flex flex-wrap gap-2"><template x-for="color in selectedProduct.availableColors.split(',').map(c => c.trim())" :key="color"><button @click="selectedOptions.Color = color" :class="{'selected': selectedOptions.Color === color}" class="option-btn" x-text="color"></button></template></div></div><div x-show="selectedProduct.hasVersionOption"><p class="font-medium text-slate-300">Phiên bản</p><div class="flex flex-wrap gap-2"><template x-for="version in ['Sân nhà', 'Sân khách', 'Thứ 3']"><button @click="selectedOptions.Version = version" :class="{'selected': selectedOptions.Version === version}" class="option-btn" x-text="version"></button></template></div></div></div><div class="mt-auto pt-6"><button @click="addToCartFromDetail()" class="btn btn-primary w-full">Thêm vào giỏ hàng</button></div></div>
+                <div class="flex flex-col"><h3 class="text-2xl font-bold text-white" x-text="selectedProduct.name"></h3><div class="flex items-baseline gap-3 mt-2"><p class="text-3xl font-bold text-primary" x-text="formatCurrency(selectedProduct.price)"></p><p x-show="selectedProduct.originalPrice > selectedProduct.price" class="text-xl text-slate-400 line-through" x-text="formatCurrency(selectedProduct.originalPrice)"></p></div><div class="space-y-4 mt-6"><div x-show="selectedProduct.availableSizes"><p class="font-medium text-slate-300">Size</p><div class="flex flex-wrap gap-2"><template x-for="size in selectedProduct.availableSizes.split(',').map(s => s.trim())" :key="size"><button @click="selectedOptions.Size = size" :class="{'selected': selectedOptions.Size === size}" class="option-btn" x-text="size"></button></template></div></div><div x-show="selectedProduct.availableColors"><p class="font-medium text-slate-300">Màu sắc</p><div class="flex flex-wrap gap-2"><template x-for="color in selectedProduct.availableColors.split(',').map(c => c.trim())" :key="color"><button @click="selectedOptions.Color = color" :class="{'selected': selectedOptions.Color === color}" class="option-btn" x-text="color"></button></template></div></div><div x-show="selectedProduct.hasVersionOption"><p class="font-medium text-slate-300">Phiên bản</p><div class="flex flex-wrap gap-2"><template x-for="version in ['Sân nhà', 'Sân khách', 'Thứ 3']"><button @click="selectedOptions.Version = version" :class="{'selected': selectedOptions.Version === version}" class="option-btn" x-text="version"></button></template></div></div></div><div class="mt-auto pt-6"><button @click="addToCartFromDetail()" class="btn btn-primary w-full">Thêm vào giỏ hàng</button></div></div>
             </div>
         </div>
     </div>
@@ -97,6 +113,6 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="./js/firebase-config.js"></script>
     <script src="./js/auth.js"></script>
-    <script src="./js/main2.js"></script>
+    <script src="./js/main.js"></script>
 </body>
 </html>
