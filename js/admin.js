@@ -24,7 +24,7 @@ auth.onAuthStateChanged(user => {
 function adminPanel() {
     return {
         // --- State ---
-        activeTab: 'orders',
+        activeTab: 'products',
         products: [], orders: [], vouchers: [], filteredOrders: [], activeFilter: 'Chờ xác nhận',
         orderSearchTerm: '', productCount: 0,
         orderCounts: { 'all': 0, 'Chờ xác nhận': 0, 'Đang xử lý': 0, 'Đang giao hàng': 0, 'Đã giao hàng': 0, 'Đã hủy': 0, 'Đã hoàn tiền': 0 },
@@ -32,11 +32,26 @@ function adminPanel() {
         editingProduct: {},
         newVoucher: { code: '', type: 'fixed', value: 0, maxUses: 1, description: '' },
         
-        // --- Product Categories & Fields ---
         categories: [
             'Quần áo thể thao', 'Giày thể thao', 'Áo đấu – Áo CLB/Đội tuyển',
             'Quần thể thao', 'Phụ kiện thể thao', 'Túi – Ba lô thể thao', 'Dụng cụ thể thao'
         ],
+
+        // --- Getters ---
+        get calculatedPrice() {
+            const op = parseFloat(this.editingProduct.originalPrice);
+            const dv = parseFloat(this.editingProduct.discountValue);
+            if (!op || op <= 0) return 0;
+            if (!dv || dv < 0) return op;
+            
+            let finalPrice;
+            if (this.editingProduct.discountType === 'percent') {
+                finalPrice = op * (1 - dv / 100);
+            } else { // 'fixed'
+                finalPrice = op - dv;
+            }
+            return Math.max(0, Math.round(finalPrice)); // Ensure price isn't negative and round it
+        },
 
         // --- Methods ---
         init() {
@@ -47,13 +62,11 @@ function adminPanel() {
         
         resetEditingProduct() {
             this.editingProduct = { 
-                id: null, name: '', price: null, sku: 'HDS-' + Date.now().toString().slice(-6), imageUrl: '', category: this.categories[0],
-                // Attributes - comma-separated strings
+                id: null, name: '', price: 0, originalPrice: null, discountType: 'percent', discountValue: 0, 
+                sku: 'HDS-' + Date.now().toString().slice(-6), imageUrl: '', category: this.categories[0],
                 availableSizes: '', availableColors: '',
                 gender: 'Unisex', version: 'Sân nhà', length: 'Dài', style: 'Thoải mái',
-                shoeType: '', accessoryType: '', toolType: '',
-                capacity: '',
-                // Flags for options
+                shoeType: '', accessoryType: '', toolType: '', capacity: '',
                 hasPlayerOption: false, hasVersionOption: false
             };
         },
@@ -61,21 +74,21 @@ function adminPanel() {
         formatCurrency(amount) { return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount); },
         formatDate(timestamp) { if (!timestamp) return 'N/A'; return new Date(timestamp.seconds * 1000).toLocaleString('vi-VN'); },
 
-        // --- Product Management ---
         fetchProducts() { db.collection('products').orderBy('createdAt', 'desc').onSnapshot(snapshot => { this.products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); this.productCount = snapshot.size; }); },
         openAddModal() { this.resetEditingProduct(); this.isModalOpen = true; },
         openEditModal(product) {
-            // Ensure all fields exist when editing an old product
             const defaultFields = this.resetEditingProduct();
             this.editingProduct = { ...defaultFields, ...product };
             this.isModalOpen = true;
         },
         async saveProduct() {
-            if (!this.editingProduct.name || !this.editingProduct.price || !this.editingProduct.category) {
-                return alert('Vui lòng điền các thông tin bắt buộc: Tên, Giá, Danh mục.');
+            if (!this.editingProduct.name || !this.editingProduct.originalPrice || !this.editingProduct.category) {
+                return alert('Vui lòng điền các thông tin bắt buộc: Tên, Giá gốc, Danh mục.');
             }
             try {
                 const { id, ...productData } = this.editingProduct;
+                productData.price = this.calculatedPrice; // Set the final price before saving
+
                 if (id) {
                     await db.collection('products').doc(id).update(productData);
                     alert('Cập nhật sản phẩm thành công!');
@@ -91,19 +104,16 @@ function adminPanel() {
         },
         async deleteProduct(id, name) { if (confirm(`Xóa sản phẩm "${name}"?`)) { try { await db.collection('products').doc(id).delete(); alert('Xóa thành công!'); } catch (e) { alert('Lỗi: ' + e.message); } } },
 
-        // --- Order Management ---
         fetchOrders() { db.collection('orders').orderBy('createdAt', 'desc').onSnapshot(snapshot => { this.orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); this.calculateOrderCounts(); this.filterOrders(); }); },
         calculateOrderCounts() { const counts = { 'all': this.orders.length, 'Chờ xác nhận': 0, 'Đang xử lý': 0, 'Đang giao hàng': 0, 'Đã giao hàng': 0, 'Đã hủy': 0, 'Đã hoàn tiền': 0 }; this.orders.forEach(order => { if (counts[order.status] !== undefined) counts[order.status]++; }); this.orderCounts = counts; },
         filterOrders() { let items = this.orders; if (this.activeFilter !== 'all') items = items.filter(o => o.status === this.activeFilter); const term = this.orderSearchTerm.trim().toLowerCase(); if (term) { items = items.filter(o => o.id.toLowerCase().includes(term) || o.customerInfo.name.toLowerCase().includes(term) || o.customerInfo.phone.includes(term)); } this.filteredOrders = items; },
         setFilter(status) { this.activeFilter = status; this.filterOrders(); },
         async updateOrderStatus(orderId, newStatus) { try { await db.collection('orders').doc(orderId).update({ status: newStatus }); } catch (e) { alert('Lỗi: ' + e.message); } },
         
-        // --- Voucher Management ---
         fetchVouchers() { db.collection('vouchers').orderBy('createdAt', 'desc').onSnapshot(snapshot => { this.vouchers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); }); },
         async saveVoucher() { const { code, value, maxUses } = this.newVoucher; if (!code || !value || value <= 0 || !maxUses || maxUses <= 0) return alert('Thông tin không hợp lệ.'); try { const voucherData = { type: this.newVoucher.type, value: parseFloat(value), description: this.newVoucher.description || '', maxUses: parseInt(maxUses, 10), usedBy: [], usageCount: 0, createdAt: firebase.firestore.FieldValue.serverTimestamp() }; await db.collection('vouchers').doc(code.toUpperCase()).set(voucherData); alert('Thêm voucher thành công!'); this.newVoucher = { code: '', type: 'fixed', value: 0, maxUses: 1, description: '' }; this.isVoucherModalOpen = false; } catch (e) { alert('Lỗi: ' + e.message); } },
         async deleteVoucher(id) { if (confirm(`Xóa voucher "${id}"?`)) { try { await db.collection('vouchers').doc(id).delete(); alert('Xóa thành công!'); } catch (e) { alert('Lỗi: ' + e.message); } } },
 
-        // --- Print ---
         printOrder(order) {
             const printableArea = document.getElementById('printable-area');
             const itemsHtml = order.items.map(item => `<tr><td style="padding: 8px; border: 1px solid #ddd; vertical-align: top;">${item.name} <br> <small>SKU: ${item.sku || 'N/A'}</small>${item.selectedOptions ? `<br><small style="color: #555;">${Object.entries(item.selectedOptions).map(([key, value]) => `<strong>${key}:</strong> ${value}`).join(', ')}</small>`: ''}${item.printing_notes ? `<br><small style="color: #d9534f;"><strong>In ấn:</strong> ${item.printing_notes}</small>` : ''}</td><td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${item.quantity}</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right;">${this.formatCurrency(item.price)}</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right;">${this.formatCurrency(item.price * item.quantity)}</td></tr>`).join('');
