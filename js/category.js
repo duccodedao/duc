@@ -1,48 +1,34 @@
 // category.js
 
-// Hàm này sẽ được gọi bởi category.html
 function categoryPage() {
-    // Kế thừa tất cả các thuộc tính và phương thức từ shopData() của main.js
-    // Điều này giúp chúng ta tái sử dụng toàn bộ logic giỏ hàng, modal, v.v.
+    // Kế thừa tất cả các thuộc tính và phương thức từ shopData của main.js
     const shop = shopData();
 
     return {
-        ...shop, // Thừa kế toàn bộ logic từ shopData
-        
+        ...shop, // Thừa kế
         categoryName: 'Đang tải...',
+        products: [], // Ghi đè lại mảng products chỉ cho trang này
         
-        // Ghi đè (override) lại hàm init của shopData
+        // Ghi đè lại hàm init
         init() {
-            // Lấy tên danh mục từ URL
             const urlParams = new URLSearchParams(window.location.search);
             this.categoryName = decodeURIComponent(urlParams.get('name') || 'Không rõ');
-            
-            // Cập nhật tiêu đề trang
             document.title = `${this.categoryName} - HD Sports`;
             
-            // Gọi hàm mới để tải sản phẩm theo danh mục
             this.fetchProductsByCategory();
-
-            // Vẫn giữ lại logic khởi tạo giỏ hàng từ shopData gốc
             this.cart = JSON.parse(localStorage.getItem('cart')) || [];
             this.$watch('cart', () => this.saveCart());
         },
 
-        // Hàm mới để truy vấn sản phẩm theo danh mục
         async fetchProductsByCategory() {
             this.isLoading = true;
-            this.products = []; // Xóa sản phẩm cũ trước khi tải
+            this.products = [];
             try {
-                // Tạo một truy vấn đến Firestore
-                const query = db.collection('products')
+                const snapshot = await db.collection('products')
                     .where('category', '==', this.categoryName)
-                    .orderBy('createdAt', 'desc');
-                
-                const snapshot = await query.get();
-                
-                // Gán kết quả vào mảng products
+                    .orderBy('createdAt', 'desc')
+                    .get();
                 this.products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
             } catch (error) {
                 console.error("Lỗi tải sản phẩm theo danh mục:", error);
                 alert("Không thể tải sản phẩm cho danh mục này.");
@@ -52,6 +38,4 @@ function categoryPage() {
         },
     };
 }
-
-// Gán hàm vào window để AlpineJS có thể truy cập
 window.categoryPage = categoryPage;
