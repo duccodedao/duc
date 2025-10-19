@@ -5,55 +5,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hệ Thống Bán Hàng & Quản Lý Kho</title>
     <style>
-        /* CSS Toàn Diện */
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 20px; background-color: #f8f9fa; color: #333; }
         .container { max-width: 1400px; margin: auto; background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-        
-        /* --- Phần Xác thực --- */
         #auth-container { max-width: 400px; margin: 50px auto; padding: 25px; border: 1px solid #ddd; border-radius: 8px; }
         .auth-form h2 { text-align: center; margin-bottom: 20px; color: #0056b3; }
         #register-form { display: none; }
         .form-toggle-link { color: #007bff; text-decoration: none; cursor: pointer; display: block; margin-top: 15px; text-align: center; }
-        .form-toggle-link:hover { text-decoration: underline; }
         .error-message { color: #dc3545; text-align: center; margin-top: 10px; min-height: 1em; }
-        
-        /* --- Bố cục chính của Ứng dụng --- */
         #app { display: none; }
         #user-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
-        
         .top-actions { margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; }
         .top-actions button { flex-grow: 1; font-size: 16px; font-weight: bold; padding: 12px 20px; }
         #open-import-modal-btn { background-color: #28a745; }
         #open-export-modal-btn { background-color: #007bff; }
         #open-inventory-modal-btn { background-color: #6c757d; }
-
         .stats-container, .main-view-container { margin-bottom: 20px; padding: 20px; border: 1px solid #e9ecef; border-radius: 5px; background-color: #fff; }
-        .stats-container h2, .main-view-container h2 { margin-top: 0; color: #343a40; }
+        h2 { margin-top: 0; color: #343a40; }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
         .stat-item p { margin: 0; font-size: 1.1em; }
         .stat-item strong { font-size: 1.3em; }
         .stat-item #daily-profit, .stat-item #total-profit { color: #28a745; }
-
         input, select, button { padding: 12px; margin: 8px 0; width: 100%; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; font-size: 16px; }
         button { color: white; cursor: pointer; border: none; font-weight: 500; transition: opacity 0.2s; }
         button:hover { opacity: 0.85; }
-
         .action-buttons button { width: auto; margin-right: 5px; padding: 6px 12px; font-size: 14px; }
         .action-buttons .edit-btn { background-color: #6c757d; }
         .action-buttons .delete-btn { background-color: #dc3545; }
-
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #dee2e6; padding: 12px; text-align: left; vertical-align: middle;}
         th { background-color: #f8f9fa; font-weight: 600; }
-        
-        /* --- Modal Styling --- */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
         .modal-content { background-color: #fefefe; margin: 5% auto; padding: 25px; border: 1px solid #888; width: 90%; max-width: 800px; border-radius: 8px; }
         .modal-content.large { max-width: 1200px; }
         .modal-body { max-height: 70vh; overflow-y: auto; }
         .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; line-height: 1; }
-        
-        /* --- Dynamic Category --- */
         .category-management { display: flex; align-items: center; gap: 10px; }
         .category-management select { flex-grow: 1; }
         .category-management button { width: auto; padding: 12px; font-size: 16px; }
@@ -63,7 +48,6 @@
 <body>
 
 <div class="container">
-
     <!-- KHỐI XÁC THỰC -->
     <div id="auth-container">
         <form id="login-form" class="auth-form"><h2>Đăng Nhập Hệ Thống</h2><input type="email" id="login-email" placeholder="Email" required><input type="password" id="login-password" placeholder="Mật khẩu" required><button type="submit" style="background-color: #007bff;">Đăng Nhập</button><p id="login-error" class="error-message"></p><span id="show-register" class="form-toggle-link">Chưa có tài khoản? Đăng ký</span></form>
@@ -74,67 +58,17 @@
     <div id="app">
         <div id="user-info"><p>Xin chào, <strong id="user-email"></strong>!</p><button id="logout-button" style="background-color:#dc3545; width:auto;">Đăng xuất</button></div>
         <h1>Bảng Điều Khiển Bán Hàng</h1>
-        
-        <div class="top-actions">
-            <button id="open-import-modal-btn">[+] NHẬP HÀNG</button>
-            <button id="open-export-modal-btn">[-] BÁN HÀNG</button>
-            <button id="open-inventory-modal-btn">[i] XEM KHO HÀNG</button>
-        </div>
-
-        <div class="stats-container">
-            <h2>Thống Kê Kinh Doanh</h2>
-            <div class="stats-grid">
-                <div class="stat-item"><p>Lợi nhuận hôm nay: <strong id="daily-profit">0</strong> đ</p></div>
-                <div class="stat-item"><p>Tổng lợi nhuận: <strong id="total-profit">0</strong> đ</p></div>
-                <div class="stat-item"><p>Tổng doanh thu: <strong id="total-revenue">0</strong> đ</p></div>
-                <div class="stat-item"><p>Tổng chi phí nhập: <strong id="total-cost">0</strong> đ</p></div>
-            </div>
-        </div>
-
-        <div class="main-view-container">
-            <h2>Lịch Sử Bán Hàng Gần Đây</h2>
-            <table><thead><tr><th>Thời gian</th><th>Tên sản phẩm</th><th>Số lượng</th><th>Tổng tiền bán</th><th>Lợi nhuận</th></tr></thead><tbody id="transaction-list"></tbody></table>
-        </div>
+        <div class="top-actions"><button id="open-import-modal-btn">[+] NHẬP HÀNG</button><button id="open-export-modal-btn">[-] BÁN HÀNG</button><button id="open-inventory-modal-btn">[i] XEM KHO HÀNG</button></div>
+        <div class="stats-container"><h2>Thống Kê Kinh Doanh</h2><div class="stats-grid"><div class="stat-item"><p>Lợi nhuận hôm nay: <strong id="daily-profit">0</strong> đ</p></div><div class="stat-item"><p>Tổng lợi nhuận: <strong id="total-profit">0</strong> đ</p></div><div class="stat-item"><p>Tổng doanh thu: <strong id="total-revenue">0</strong> đ</p></div><div class="stat-item"><p>Tổng chi phí nhập: <strong id="total-cost">0</strong> đ</p></div></div></div>
+        <div class="main-view-container"><h2>Lịch Sử Bán Hàng Gần Đây</h2><table><thead><tr><th>Thời gian</th><th>Tên sản phẩm</th><th>Số lượng</th><th>Tổng tiền bán</th><th>Lợi nhuận</th></tr></thead><tbody id="transaction-list"></tbody></table></div>
     </div>
 </div>
 
 <!-- CÁC MODAL -->
-<div id="inventory-modal" class="modal"><div class="modal-content large"><span class="close">&times;</span><h2>Báo Cáo Tồn Kho</h2><div class="modal-body"><table><thead><tr><th>Tên sản phẩm</th><th>Mã hàng</th><th>Giá nhập</th><th>Giá bán</th><th>Danh mục</th><th>Tồn kho</th><th>Hành động</th></tr></thead><tbody id="inventory-list-table"></tbody></table></div></div></div>
+<div id="inventory-modal" class="modal"><div class="modal-content large"><span class="close">&times;</span><h2>Báo Cáo Tồn Kho</h2><input type="text" id="inventory-search-input" placeholder="Tìm kiếm trong kho..."><div class="modal-body"><table><thead><tr><th>Tên sản phẩm</th><th>Mã hàng</th><th>Giá nhập</th><th>Giá bán</th><th>Danh mục</th><th>Tồn kho</th><th>Hành động</th></tr></thead><tbody id="inventory-list-table"></tbody></table></div></div></div>
 <div id="edit-modal" class="modal"><div class="modal-content"><span class="close">&times;</span><h2>Chỉnh Sửa Thông Tin Sản Phẩm</h2><form id="edit-form"><input type="hidden" id="edit-product-id"><label>Tên sản phẩm:</label><input type="text" id="edit-product-name" required><label>Mã hàng:</label><input type="text" id="edit-product-code" required><label>Giá nhập:</label><input type="number" id="edit-import-price" min="0" required><label>Giá bán:</label><input type="number" id="edit-sell-price" min="0" required><label>Danh mục:</label><select id="edit-product-category" required></select><button type="submit" style="background-color: #007bff;">Lưu thay đổi</button></form></div></div>
-
-<div id="import-goods-modal" class="modal">
-    <div class="modal-content"><span class="close">&times;</span><h2>Form Nhập Hàng</h2>
-        <form id="import-form">
-            <label>1. Chọn hoặc Thêm Danh Mục Mới:</label>
-            <div class="category-management">
-                <select id="import-category" required></select>
-                <button type="button" id="add-category-btn">+</button>
-            </div>
-            <div id="new-category-input-container">
-                <input type="text" id="new-category-name" placeholder="Nhập tên danh mục mới..."><button type="button" id="save-category-btn">Lưu</button>
-            </div>
-            <label>2. Chọn Sản Phẩm:</label><select id="import-product-select" required></select>
-            <div id="new-product-fields" style="display:none; border-top: 1px dashed #ccc; margin-top: 15px; padding-top: 15px;"><h4>Thêm thông tin sản phẩm mới</h4><input type="text" id="new-product-name" placeholder="Tên sản phẩm mới"><input type="text" id="new-product-code" placeholder="Mã hàng"><input type="number" id="new-import-price" placeholder="Giá nhập"><input type="number" id="new-sell-price" placeholder="Giá bán"></div>
-            <div id="existing-product-info" style="display: none; color: #0056b3;"><p>Tồn kho hiện tại: <strong id="current-inventory-info"></strong></p></div>
-            <label>3. Nhập Số Lượng:</label><input type="number" id="import-quantity" placeholder="Số lượng nhập" min="1" required>
-            <button type="submit" style="background-color:#28a745;">Xác nhận Nhập Hàng</button>
-        </form>
-    </div>
-</div>
-
-<div id="export-goods-modal" class="modal">
-    <div class="modal-content"><span class="close">&times;</span><h2>Form Bán Hàng</h2>
-        <form id="export-form">
-            <label>1. Chọn Danh Mục:</label><select id="export-category" required></select>
-            <label>2. Chọn Sản Phẩm (chỉ hiện sản phẩm còn hàng):</label><select id="export-product-select" required></select>
-            <div id="export-product-info" style="display:none; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #ccc;">
-                <p>Tồn kho hiện tại: <strong id="export-current-inventory"></strong></p><p>Giá bán: <strong id="export-sell-price"></strong> đ</p>
-            </div>
-            <label>3. Nhập Số Lượng Bán:</label><input type="number" id="export-quantity" placeholder="Số lượng bán" min="1" required>
-            <button type="submit" style="background-color:#007bff;">Xác nhận Bán</button>
-        </form>
-    </div>
-</div>
+<div id="import-goods-modal" class="modal"><div class="modal-content"><span class="close">&times;</span><h2>Form Nhập Hàng</h2><form id="import-form"><label>1. Chọn hoặc Thêm Danh Mục Mới:</label><div class="category-management"><select id="import-category" required></select><button type="button" id="add-category-btn">+</button></div><div id="new-category-input-container"><input type="text" id="new-category-name" placeholder="Nhập tên danh mục mới..."><button type="button" id="save-category-btn">Lưu</button></div><label>2. Chọn Sản Phẩm:</label><select id="import-product-select" required></select><div id="new-product-fields" style="display:none; border-top: 1px dashed #ccc; margin-top: 15px; padding-top: 15px;"><h4>Thêm thông tin sản phẩm mới</h4><input type="text" id="new-product-name" placeholder="Tên sản phẩm mới"><input type="text" id="new-product-code" placeholder="Mã hàng"><input type="number" id="new-import-price" placeholder="Giá nhập"><input type="number" id="new-sell-price" placeholder="Giá bán"></div><div id="existing-product-info" style="display: none; color: #0056b3;"><p>Tồn kho hiện tại: <strong id="current-inventory-info"></strong></p></div><label>3. Nhập Số Lượng:</label><input type="number" id="import-quantity" placeholder="Số lượng nhập" min="1" required><button type="submit" style="background-color:#28a745;">Xác nhận Nhập Hàng</button></form></div></div>
+<div id="export-goods-modal" class="modal"><div class="modal-content"><span class="close">&times;</span><h2>Form Bán Hàng</h2><form id="export-form"><label>1. Chọn Danh Mục:</label><select id="export-category" required></select><label>2. Chọn Sản Phẩm (chỉ hiện sản phẩm còn hàng):</label><select id="export-product-select" required></select><div id="export-product-info" style="display:none; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #ccc;"><p>Tồn kho hiện tại: <strong id="export-current-inventory"></strong></p><p>Giá bán: <strong id="export-sell-price"></strong> đ</p></div><label>3. Nhập Số Lượng Bán:</label><input type="number" id="export-quantity" placeholder="Số lượng bán" min="1" required><button type="submit" style="background-color:#007bff;">Xác nhận Bán</button></form></div></div>
 
 <!-- Firebase SDK & JavaScript -->
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
@@ -154,9 +88,10 @@
         measurementId: "G-68P4PT49B0"
     };
 
+    // Correct Initialization
     firebase.initializeApp(firebaseConfig);
-    const auth = auth.firebase.auth();
-    const db = db.firebase.firestore();
+    const auth = firebase.auth();
+    const db = firebase.firestore();
     const productsCollection = db.collection('products');
     const transactionsCollection = db.collection('transactions');
     const categoriesCollection = db.collection('categories');
@@ -176,7 +111,7 @@
     let allTransactionsCache = [];
     let allCategoriesCache = [];
 
-    // --- 1. PHẦN XÁC THỰC ---
+    // --- 1. AUTHENTICATION ---
     auth.onAuthStateChanged(user => {
         const app = document.getElementById('app');
         const authContainer = document.getElementById('auth-container');
@@ -191,84 +126,43 @@
         }
     });
 
-    document.getElementById('show-register').addEventListener('click', () => {
-        document.getElementById('login-form').style.display = 'none';
-        document.getElementById('register-form').style.display = 'block';
-    });
-    document.getElementById('show-login').addEventListener('click', () => {
-        document.getElementById('register-form').style.display = 'none';
-        document.getElementById('login-form').style.display = 'block';
-    });
-
-    document.getElementById('register-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const email = document.getElementById('register-email').value;
-        const password = document.getElementById('register-password').value;
-        const errorEl = document.getElementById('register-error');
-        errorEl.textContent = '';
-        auth.createUserWithEmailAndPassword(email, password).catch(err => errorEl.textContent = err.message);
-    });
-
-    document.getElementById('login-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const email = document.getElementById('login-email').value;
-        const password = document.getElementById('login-password').value;
-        const errorEl = document.getElementById('login-error');
-        errorEl.textContent = '';
-        auth.signInWithEmailAndPassword(email, password).catch(err => errorEl.textContent = "Email hoặc mật khẩu không đúng.");
-    });
-
+    document.getElementById('show-register').addEventListener('click', () => { document.getElementById('login-form').style.display = 'none'; document.getElementById('register-form').style.display = 'block'; });
+    document.getElementById('show-login').addEventListener('click', () => { document.getElementById('register-form').style.display = 'none'; document.getElementById('login-form').style.display = 'block'; });
+    document.getElementById('register-form').addEventListener('submit', (e) => { e.preventDefault(); const email = document.getElementById('register-email').value; const password = document.getElementById('register-password').value; const errorEl = document.getElementById('register-error'); errorEl.textContent = ''; auth.createUserWithEmailAndPassword(email, password).catch(err => errorEl.textContent = err.message); });
+    document.getElementById('login-form').addEventListener('submit', (e) => { e.preventDefault(); const email = document.getElementById('login-email').value; const password = document.getElementById('login-password').value; const errorEl = document.getElementById('login-error'); errorEl.textContent = ''; auth.signInWithEmailAndPassword(email, password).catch(err => errorEl.textContent = "Email hoặc mật khẩu không đúng."); });
     document.getElementById('logout-button').addEventListener('click', () => auth.signOut());
 
-
-    // --- 2. TẢI DỮ LIỆU & HIỂN THỊ ---
+    // --- 2. DATA LOADING & RENDERING ---
     async function loadInitialData() {
         await Promise.all([loadProducts(), loadTransactions(), loadCategories()]);
         renderTransactionTable(allTransactionsCache);
         loadStats();
     }
-
-    async function loadProducts() {
-        const snapshot = await productsCollection.orderBy('name').get();
-        allProductsCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    }
-
-    async function loadTransactions() {
-        const snapshot = await transactionsCollection.orderBy('timestamp', 'desc').get();
-        allTransactionsCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    }
-    
-    async function loadCategories() {
-        const snapshot = await categoriesCollection.orderBy('name').get();
-        allCategoriesCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    }
+    async function loadProducts() { const snapshot = await productsCollection.orderBy('name').get(); allProductsCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); }
+    async function loadTransactions() { const snapshot = await transactionsCollection.orderBy('timestamp', 'desc').get(); allTransactionsCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); }
+    async function loadCategories() { const snapshot = await categoriesCollection.orderBy('name').get(); allCategoriesCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); }
 
     function renderTransactionTable(transactions) {
         let html = '';
         const exportTransactions = transactions.filter(t => t.type === 'export');
-        if (exportTransactions.length === 0) {
-            html = '<tr><td colspan="5" style="text-align: center;">Chưa có giao dịch bán hàng nào.</td></tr>';
-        } else {
-            exportTransactions.forEach(t => {
-                const timestamp = t.timestamp ? new Date(t.timestamp.toDate()).toLocaleString('vi-VN') : 'N/A';
-                const revenue = t.revenue || 0;
-                const profit = t.profit || 0;
-                html += `<tr><td>${timestamp}</td><td>${t.productName}</td><td>${t.quantity}</td><td>${revenue.toLocaleString('vi-VN')} đ</td><td style="color: green; font-weight: bold;">${profit.toLocaleString('vi-VN')} đ</td></tr>`;
-            });
-        }
+        if (exportTransactions.length === 0) { html = '<tr><td colspan="5" style="text-align: center;">Chưa có giao dịch bán hàng nào.</td></tr>'; } 
+        else { exportTransactions.forEach(t => { const timestamp = t.timestamp ? new Date(t.timestamp.toDate()).toLocaleString('vi-VN') : 'N/A'; const revenue = t.revenue || 0; const profit = t.profit || 0; html += `<tr><td>${timestamp}</td><td>${t.productName}</td><td>${t.quantity}</td><td>${revenue.toLocaleString('vi-VN')} đ</td><td style="color: green; font-weight: bold;">${profit.toLocaleString('vi-VN')} đ</td></tr>`; }); }
         transactionList.innerHTML = html;
     }
     
     function populateCategoryDropdown(selectElementId, selectedValue = '') {
         const selectEl = document.getElementById(selectElementId);
-        selectEl.innerHTML = '<option value="" disabled>-- Chọn danh mục --</option>' 
-            + allCategoriesCache.map(c => `<option value="${c.name}" ${c.name === selectedValue ? 'selected' : ''}>${c.name}</option>`).join('');
+        selectEl.innerHTML = '<option value="" disabled>-- Chọn danh mục --</option>' + allCategoriesCache.map(c => `<option value="${c.name}" ${c.name === selectedValue ? 'selected' : ''}>${c.name}</option>`).join('');
+        if (!selectedValue) selectEl.selectedIndex = 0;
     }
 
-    // --- 3. QUẢN LÝ KHO HÀNG & SẢN PHẨM ---
-    document.getElementById('open-inventory-modal-btn').addEventListener('click', () => {
-        renderInventoryTable(allProductsCache);
-        inventoryModal.style.display = 'block';
+    // --- 3. INVENTORY MANAGEMENT & PRODUCTS ---
+    document.getElementById('open-inventory-modal-btn').addEventListener('click', () => { renderInventoryTable(allProductsCache); inventoryModal.style.display = 'block'; });
+    
+    document.getElementById('inventory-search-input').addEventListener('keyup', (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        const filtered = allProductsCache.filter(p => p.name.toLowerCase().includes(searchTerm) || p.code.toLowerCase().includes(searchTerm));
+        renderInventoryTable(filtered);
     });
 
     function renderInventoryTable(products) {
@@ -295,96 +189,56 @@
         e.preventDefault();
         const id = document.getElementById('edit-product-id').value;
         const updatedData = {
-            name: document.getElementById('edit-product-name').value,
-            code: document.getElementById('edit-product-code').value,
-            importPrice: parseFloat(document.getElementById('edit-import-price').value),
-            sellPrice: parseFloat(document.getElementById('edit-sell-price').value),
+            name: document.getElementById('edit-product-name').value, code: document.getElementById('edit-product-code').value,
+            importPrice: parseFloat(document.getElementById('edit-import-price').value), sellPrice: parseFloat(document.getElementById('edit-sell-price').value),
             category: document.getElementById('edit-product-category').value,
         };
         await productsCollection.doc(id).update(updatedData);
         alert('Cập nhật thành công!');
         editModal.style.display = 'none';
-        loadInitialData();
+        await loadInitialData();
+        renderInventoryTable(allProductsCache); // Re-render inventory modal if it's open
     });
 
     window.deleteProduct = async (id) => {
         if (confirm('Bạn có chắc chắn muốn xóa sản phẩm này? Mọi dữ liệu liên quan sẽ bị mất.')) {
             await productsCollection.doc(id).delete();
             alert('Xóa sản phẩm thành công.');
-            loadInitialData();
+            await loadInitialData();
+            renderInventoryTable(allProductsCache);
         }
     };
 
-    // --- 4. QUY TRÌNH NHẬP HÀNG & DANH MỤC ---
-    document.getElementById('open-import-modal-btn').addEventListener('click', () => {
-        document.getElementById('import-form').reset();
-        populateCategoryDropdown('import-category');
-        document.getElementById('new-product-fields').style.display = 'none';
-        document.getElementById('existing-product-info').style.display = 'none';
-        document.getElementById('import-product-select').innerHTML = '<option value="">-- Chọn danh mục trước --</option>';
-        importGoodsModal.style.display = 'block';
-    });
-
-    document.getElementById('add-category-btn').addEventListener('click', () => {
-        document.getElementById('new-category-input-container').style.display = 'flex';
-    });
-
+    // --- 4. IMPORT WORKFLOW & CATEGORIES ---
+    document.getElementById('open-import-modal-btn').addEventListener('click', () => { document.getElementById('import-form').reset(); populateCategoryDropdown('import-category'); document.getElementById('new-product-fields').style.display = 'none'; document.getElementById('existing-product-info').style.display = 'none'; document.getElementById('import-product-select').innerHTML = '<option value="">-- Chọn danh mục trước --</option>'; importGoodsModal.style.display = 'block'; });
+    document.getElementById('add-category-btn').addEventListener('click', () => { document.getElementById('new-category-input-container').style.display = 'flex'; });
     document.getElementById('save-category-btn').addEventListener('click', async () => {
         const newCategoryName = document.getElementById('new-category-name').value.trim();
         if (!newCategoryName) { alert("Tên danh mục không được để trống."); return; }
-        
         const exists = allCategoriesCache.some(c => c.name.toLowerCase() === newCategoryName.toLowerCase());
         if (exists) { alert("Danh mục này đã tồn tại."); return; }
-        
         await categoriesCollection.add({ name: newCategoryName });
         document.getElementById('new-category-name').value = '';
         document.getElementById('new-category-input-container').style.display = 'none';
-        
         await loadCategories();
         populateCategoryDropdown('import-category', newCategoryName);
         document.getElementById('import-category').dispatchEvent(new Event('change'));
     });
     
-    document.getElementById('import-category').addEventListener('change', (e) => {
-        const category = e.target.value;
-        const productsInCategory = allProductsCache.filter(p => p.category === category);
-        let optionsHtml = `<option value="" disabled selected>-- Chọn sản phẩm hoặc thêm mới --</option>` 
-            + productsInCategory.map(p => `<option value="${p.id}">${p.name} (${p.code})</option>`).join('')
-            + `<option value="new" style="font-weight: bold; color: #007bff;">-- Thêm sản phẩm mới --</option>`;
-        document.getElementById('import-product-select').innerHTML = optionsHtml;
-    });
-
+    document.getElementById('import-category').addEventListener('change', (e) => { const category = e.target.value; const productsInCategory = allProductsCache.filter(p => p.category === category); let optionsHtml = `<option value="" disabled selected>-- Chọn sản phẩm hoặc thêm mới --</option>` + productsInCategory.map(p => `<option value="${p.id}">${p.name} (${p.code})</option>`).join('') + `<option value="new" style="font-weight: bold; color: #007bff;">-- Thêm sản phẩm mới --</option>`; document.getElementById('import-product-select').innerHTML = optionsHtml; });
     document.getElementById('import-product-select').addEventListener('change', (e) => {
-        const productId = e.target.value;
-        const newFields = document.getElementById('new-product-fields');
-        const existingInfo = document.getElementById('existing-product-info');
+        const productId = e.target.value; const newFields = document.getElementById('new-product-fields'); const existingInfo = document.getElementById('existing-product-info');
         const fieldsToToggle = ['new-product-name', 'new-product-code', 'new-import-price', 'new-sell-price'];
-
-        if (productId === 'new') {
-            newFields.style.display = 'block'; existingInfo.style.display = 'none';
-            fieldsToToggle.forEach(id => document.getElementById(id).required = true);
-        } else if (productId) {
-            newFields.style.display = 'none'; existingInfo.style.display = 'block';
-            fieldsToToggle.forEach(id => document.getElementById(id).required = false);
-            const product = allProductsCache.find(p => p.id === productId);
-            document.getElementById('current-inventory-info').textContent = product.inventory;
-        } else {
-            newFields.style.display = 'none'; existingInfo.style.display = 'none';
-        }
+        if (productId === 'new') { newFields.style.display = 'block'; existingInfo.style.display = 'none'; fieldsToToggle.forEach(id => document.getElementById(id).required = true); } 
+        else if (productId) { newFields.style.display = 'none'; existingInfo.style.display = 'block'; fieldsToToggle.forEach(id => document.getElementById(id).required = false); const product = allProductsCache.find(p => p.id === productId); document.getElementById('current-inventory-info').textContent = product.inventory; } 
+        else { newFields.style.display = 'none'; existingInfo.style.display = 'none'; }
     });
 
     document.getElementById('import-form').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const category = document.getElementById('import-category').value;
-        const productId = document.getElementById('import-product-select').value;
-        const quantity = parseInt(document.getElementById('import-quantity').value);
-
+        const category = document.getElementById('import-category').value; const productId = document.getElementById('import-product-select').value; const quantity = parseInt(document.getElementById('import-quantity').value);
         if (productId === 'new') {
-            const newProduct = {
-                name: document.getElementById('new-product-name').value, code: document.getElementById('new-product-code').value,
-                importPrice: parseFloat(document.getElementById('new-import-price').value), sellPrice: parseFloat(document.getElementById('new-sell-price').value),
-                category, inventory: quantity
-            };
+            const newProduct = { name: document.getElementById('new-product-name').value, code: document.getElementById('new-product-code').value, importPrice: parseFloat(document.getElementById('new-import-price').value), sellPrice: parseFloat(document.getElementById('new-sell-price').value), category, inventory: quantity };
             const docRef = await productsCollection.add(newProduct);
             await createTransaction('import', docRef.id, newProduct.name, quantity, 0, quantity * newProduct.importPrice, 0);
         } else {
@@ -392,93 +246,43 @@
             await productsCollection.doc(productId).update({ inventory: firebase.firestore.FieldValue.increment(quantity) });
             await createTransaction('import', productId, product.name, quantity, 0, quantity * product.importPrice, 0);
         }
-        alert('Nhập hàng thành công!');
-        importGoodsModal.style.display = 'none';
-        loadInitialData();
+        alert('Nhập hàng thành công!'); importGoodsModal.style.display = 'none'; loadInitialData();
     });
 
-
-    // --- 5. QUY TRÌNH BÁN HÀNG ---
-    document.getElementById('open-export-modal-btn').addEventListener('click', () => {
-        document.getElementById('export-form').reset();
-        populateCategoryDropdown('export-category');
-        document.getElementById('export-product-info').style.display = 'none';
-        document.getElementById('export-product-select').innerHTML = '<option value="">-- Chọn danh mục trước --</option>';
-        exportGoodsModal.style.display = 'block';
-    });
-    
-    document.getElementById('export-category').addEventListener('change', (e) => {
-        const category = e.target.value;
-        const productSelect = document.getElementById('export-product-select');
-        const productsInStock = allProductsCache.filter(p => p.category === category && p.inventory > 0);
-        productSelect.innerHTML = '<option value="" disabled selected>-- Chọn sản phẩm --</option>' + productsInStock.map(p => `<option value="${p.id}">${p.name} (Tồn: ${p.inventory})</option>`).join('');
-    });
-    
-    document.getElementById('export-product-select').addEventListener('change', (e) => {
-        const productId = e.target.value; if (!productId) return;
-        const product = allProductsCache.find(p => p.id === productId);
-        document.getElementById('export-current-inventory').textContent = product.inventory;
-        document.getElementById('export-sell-price').textContent = product.sellPrice.toLocaleString('vi-VN');
-        document.getElementById('export-quantity').max = product.inventory;
-        document.getElementById('export-product-info').style.display = 'block';
-    });
-
+    // --- 5. EXPORT (SALES) WORKFLOW ---
+    document.getElementById('open-export-modal-btn').addEventListener('click', () => { document.getElementById('export-form').reset(); populateCategoryDropdown('export-category'); document.getElementById('export-product-info').style.display = 'none'; document.getElementById('export-product-select').innerHTML = '<option value="">-- Chọn danh mục trước --</option>'; exportGoodsModal.style.display = 'block'; });
+    document.getElementById('export-category').addEventListener('change', (e) => { const category = e.target.value; const productSelect = document.getElementById('export-product-select'); const productsInStock = allProductsCache.filter(p => p.category === category && p.inventory > 0); productSelect.innerHTML = '<option value="" disabled selected>-- Chọn sản phẩm --</option>' + productsInStock.map(p => `<option value="${p.id}">${p.name} (Tồn: ${p.inventory})</option>`).join(''); });
+    document.getElementById('export-product-select').addEventListener('change', (e) => { const productId = e.target.value; if (!productId) return; const product = allProductsCache.find(p => p.id === productId); document.getElementById('export-current-inventory').textContent = product.inventory; document.getElementById('export-sell-price').textContent = product.sellPrice.toLocaleString('vi-VN'); document.getElementById('export-quantity').max = product.inventory; document.getElementById('export-product-info').style.display = 'block'; });
     document.getElementById('export-form').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const productId = document.getElementById('export-product-select').value;
-        const quantity = parseInt(document.getElementById('export-quantity').value);
-        const product = allProductsCache.find(p => p.id === productId);
-
+        const productId = document.getElementById('export-product-select').value; const quantity = parseInt(document.getElementById('export-quantity').value); const product = allProductsCache.find(p => p.id === productId);
         if (isNaN(quantity) || quantity <= 0 || quantity > product.inventory) { alert('Số lượng bán không hợp lệ!'); return; }
-
         await productsCollection.doc(productId).update({ inventory: firebase.firestore.FieldValue.increment(-quantity) });
-        
-        const revenue = quantity * product.sellPrice;
-        const cost = quantity * product.importPrice;
-        const profit = revenue - cost;
+        const revenue = quantity * product.sellPrice; const cost = quantity * product.importPrice; const profit = revenue - cost;
         await createTransaction('export', productId, product.name, quantity, revenue, cost, profit);
-
-        alert('Bán hàng thành công!');
-        exportGoodsModal.style.display = 'none';
-        loadInitialData();
+        alert('Bán hàng thành công!'); exportGoodsModal.style.display = 'none'; loadInitialData();
     });
 
-
-    // --- 6. HÀM TIỆN ÍCH & THỐNG KÊ ---
-    async function createTransaction(type, productId, productName, quantity, revenue, cost, profit) {
-        await transactionsCollection.add({ type, productId, productName, quantity, revenue, cost, profit, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
-    }
-
+    // --- 6. CORE LOGIC & UTILITIES ---
+    async function createTransaction(type, productId, productName, quantity, revenue, cost, profit) { await transactionsCollection.add({ type, productId, productName, quantity, revenue, cost, profit, timestamp: firebase.firestore.FieldValue.serverTimestamp() }); }
     function loadStats() {
         let totalRevenue = 0, totalImportCost = 0, totalProfit = 0, dailyProfit = 0;
-        const startOfDay = new Date();
-        startOfDay.setHours(0, 0, 0, 0);
-
+        const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
         allTransactionsCache.forEach(t => {
             if (t.type === 'export') {
-                totalRevenue += t.revenue || 0;
-                totalProfit += t.profit || 0;
-                if (t.timestamp && t.timestamp.toDate() >= startOfDay) {
-                    dailyProfit += t.profit || 0;
-                }
-            } else if (t.type === 'import') {
-                totalImportCost += t.cost || 0;
-            }
+                totalRevenue += t.revenue || 0; totalProfit += t.profit || 0;
+                if (t.timestamp && t.timestamp.toDate() >= startOfDay) { dailyProfit += t.profit || 0; }
+            } else if (t.type === 'import') { totalImportCost += t.cost || 0; }
         });
-
         document.getElementById('daily-profit').textContent = dailyProfit.toLocaleString('vi-VN');
         document.getElementById('total-profit').textContent = totalProfit.toLocaleString('vi-VN');
         document.getElementById('total-revenue').textContent = totalRevenue.toLocaleString('vi-VN');
         document.getElementById('total-cost').textContent = totalImportCost.toLocaleString('vi-VN');
     }
 
-    // Đóng Modal
-    document.querySelectorAll('.modal .close').forEach(el => {
-        el.onclick = () => { el.closest('.modal').style.display = 'none'; }
-    });
-    window.onclick = (event) => {
-        if (event.target.classList.contains('modal')) event.target.style.display = 'none';
-    };
+    // Close Modals
+    document.querySelectorAll('.modal .close').forEach(el => { el.onclick = () => { el.closest('.modal').style.display = 'none'; } });
+    window.onclick = (event) => { if (event.target.classList.contains('modal')) event.target.style.display = 'none'; };
 </script>
 </body>
 </html>
