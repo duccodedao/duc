@@ -3,126 +3,199 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Quản Lý Bán Hàng (Đã sửa lỗi)</title>
-    <!-- Firebase SDKs (Compat version for easier usage) -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
-    <!-- SweetAlert2 -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <title>Hệ Thống Quản Lý Bán Hàng Toàn Diện</title>
     <style>
-        :root { --primary-color: #007bff; --success-color: #28a745; --danger-color: #dc3545; --info-color: #17a2b8; --warning-color: #ffc107; --light-gray: #f8f9fa; --dark-gray: #343a40; --white: #fff; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background-color: #f4f6f9; color: var(--dark-gray); font-size: 16px; }
-        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.8); z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column; transition: opacity 0.3s, visibility 0.3s; visibility: hidden; opacity: 0; }
-        .spinner { border: 8px solid #f3f3f3; border-top: 8px solid var(--primary-color); border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite; }
-        #loading-overlay p { margin-top: 20px; font-size: 1.2em; font-weight: 500; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .app-layout { display: flex; min-height: 100vh; }
-        .sidebar { width: 240px; background-color: var(--dark-gray); color: var(--white); display: flex; flex-direction: column; transition: transform 0.3s ease-in-out; }
-        .sidebar-header { padding: 20px; text-align: center; font-size: 1.5em; font-weight: bold; border-bottom: 1px solid #4a5056; }
-        .sidebar-nav { flex-grow: 1; }
-        .sidebar-nav ul { list-style: none; padding: 0; margin: 0; }
-        .sidebar-nav a { display: block; padding: 15px 20px; color: #adb5bd; text-decoration: none; font-weight: 500; border-left: 3px solid transparent; transition: all 0.2s; }
-        .sidebar-nav a:hover { background-color: #495057; color: var(--white); }
-        .sidebar-nav a.active { background-color: var(--primary-color); color: var(--white); border-left-color: var(--warning-color); }
-        .sidebar-footer { padding: 20px; border-top: 1px solid #4a5056; }
-        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
-        .page { display: none; }
-        .page.active { display: block; animation: fadeIn 0.5s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; }
-        .page-header h1 { margin: 0; }
-        .card { background: var(--white); padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 25px; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
-        .stat-item { text-align: center; }
-        .stat-item .label { font-size: 0.9em; color: #6c757d; }
-        .stat-item .value { font-size: 1.8em; font-weight: bold; color: var(--primary-color); }
-        .stat-item .value.profit { color: var(--success-color); }
-        .stat-item .value.cost { color: var(--danger-color); }
-        button { padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; transition: all 0.2s; }
+        :root { --primary-color: #007bff; --success-color: #28a745; --danger-color: #dc3545; --warning-color: #ffc107; --info-color: #17a2b8; --secondary-color: #6c757d; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: #f8f9fa; color: #333; }
+        .container { max-width: 1400px; margin: 20px auto; background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .grid-container { display: grid; grid-template-columns: 1fr; gap: 25px; }
+        @media (min-width: 992px) { .grid-container { grid-template-columns: repeat(2, 1fr); } }
+
+        /* --- Authentication --- */
+        #auth-container { max-width: 400px; margin: 50px auto; padding: 25px; border: 1px solid #ddd; border-radius: 8px; background: #fff; }
+        .auth-form h2 { text-align: center; margin-bottom: 20px; color: var(--primary-color); }
+        #register-form { display: none; }
+        .form-toggle-link { color: var(--primary-color); text-decoration: none; cursor: pointer; display: block; margin-top: 15px; text-align: center; }
+        .error-message { color: var(--danger-color); text-align: center; margin-top: 10px; min-height: 1em; }
+
+        /* --- Main App --- */
+        #app { display: none; }
+        #user-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
+        h1, h2, h3 { color: #343a40; }
+        h2 { border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 30px; margin-bottom: 20px;}
+        input, select, button { padding: 12px; margin: 8px 0; width: 100%; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; font-size: 16px; }
+        button { color: white; cursor: pointer; border: none; font-weight: 500; transition: opacity 0.2s; }
+        button:hover:not(:disabled) { opacity: 0.9; }
         button:disabled { background-color: #ccc; cursor: not-allowed; }
-        .btn-primary { background-color: var(--primary-color); color: var(--white); }
-        .btn-success { background-color: var(--success-color); color: var(--white); }
-        .btn-danger { background-color: var(--danger-color); color: var(--white); }
-        .btn-secondary { background-color: #6c757d; color: var(--white); }
-        input, select { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #dee2e6; padding: 12px; text-align: left; vertical-align: middle; }
-        th { background-color: var(--light-gray); }
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); }
-        .modal-content { background-color: #fefefe; margin: 5% auto; padding: 30px; border-radius: 8px; width: 90%; max-width: 800px; }
+        th, td { border: 1px solid #dee2e6; padding: 12px; text-align: left; vertical-align: middle;}
+        th { background-color: #f8f9fa; font-weight: 600; }
+        .action-buttons button { width: auto; font-size: 14px; padding: 6px 12px; margin: 2px;}
+
+        /* --- Dashboard & Main Buttons --- */
+        .main-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .main-actions button { padding: 20px; font-size: 1.1em; font-weight: bold; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+        .stat-item { background-color: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 5px solid; }
+        .stat-item p { margin: 0; font-size: 1em; color: #555; }
+        .stat-item strong { font-size: 1.5em; color: #000; display: block; margin-top: 5px; }
+        .stat-profit { border-color: var(--success-color); } .stat-profit strong { color: var(--success-color); }
+        .stat-revenue { border-color: var(--primary-color); } .stat-revenue strong { color: var(--primary-color); }
+        .stat-cost { border-color: var(--warning-color); } .stat-cost strong { color: var(--warning-color); }
+        .stat-info { border-color: var(--info-color); } .stat-info strong { color: var(--info-color); }
+
+        /* --- Modals --- */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
+        .modal-content { background-color: #fefefe; padding: 25px; border: 1px solid #888; width: 100%; max-width: 500px; border-radius: 8px; animation: slide-down 0.3s ease-out; position: relative; }
         .modal-content.large { max-width: 1000px; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .modal-header h2 { margin: 0; }
-        .close-btn { font-size: 28px; font-weight: bold; cursor: pointer; color: #aaa; }
-        .batch-item-row { display: grid; grid-template-columns: 1.5fr 2fr 0.5fr 1fr 1fr auto; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
-        #sale-item-rows .batch-item-row { grid-template-columns: 1.5fr 2fr 0.5fr 1fr 1fr auto; }
-        .remove-row-btn { background: none; border: none; color: var(--danger-color); font-size: 1.5em; cursor: pointer; padding: 5px; margin-bottom: 15px; }
-        .customer-info-wrapper { position: relative; }
-        .customer-status-icon { position: absolute; right: 10px; top: 10px; font-size: 1.2em; transition: opacity 0.3s; }
-        .customer-status-icon.saving { color: var(--primary-color); animation: spin 1s linear infinite; }
-        .customer-status-icon.saved { color: var(--success-color); }
-        .menu-toggle { display: none; background: none; border: none; color: white; font-size: 24px; cursor: pointer; position: absolute; top: 15px; right: 15px; z-index: 1100; }
-        @media (max-width: 768px) {
-            .sidebar { position: fixed; top: 0; left: 0; height: 100%; transform: translateX(-100%); z-index: 1000; }
-            .sidebar.open { transform: translateX(0); }
-            .main-content { padding: 20px; padding-top: 70px; }
-            .menu-toggle { display: block; color: var(--dark-gray); }
-            .batch-item-row, #sale-item-rows .batch-item-row { grid-template-columns: 1fr; }
-        }
+        .modal-body { max-height: 75vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 20px; }
+        .close { color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer; }
+        @keyframes slide-down { from { transform: translateY(-30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* --- Loader & Custom Alert --- */
+        #loader { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(255, 255, 255, 0.8); justify-content: center; align-items: center; flex-direction: column; gap: 15px; font-size: 1.2em; color: #333;}
+        .spinner { border: 5px solid #f3f3f3; border-top: 5px solid var(--primary-color); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #custom-alert-modal .modal-content { max-width: 400px; text-align: center; }
+        #custom-alert-message { margin-bottom: 20px; font-size: 1.1em; }
+
+        /* --- Specific Elements --- */
+        .danger-zone { border: 2px solid var(--danger-color); border-radius: 8px; padding: 20px; margin-top: 20px; }
+        .danger-zone h3 { color: var(--danger-color); }
+        .cart-item-actions { display: flex; align-items: center; gap: 5px;}
+        .cart-item-actions button { padding: 5px 10px; font-size: 12px; width: auto;}
+        
+        /* Tabs */
+        .tabs { display: flex; border-bottom: 2px solid #ccc; margin-bottom: 15px; }
+        .tab-link { padding: 10px 20px; cursor: pointer; background: #f1f1f1; border: 1px solid #ccc; border-bottom: none; margin-bottom: -2px; border-radius: 5px 5px 0 0;}
+        .tab-link.active { background: #fff; border-bottom: 2px solid #fff; font-weight: bold; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Category product list */
+        .category-product-list { display: none; padding-left: 20px; background-color: #f9f9f9; }
+        .category-row.active { background-color: #e9ecef; }
     </style>
 </head>
 <body>
 
-<div id="loading-overlay">
+<!-- LOADER OVERLAY -->
+<div id="loader" style="display: flex;">
     <div class="spinner"></div>
     <p>Đang tải dữ liệu...</p>
 </div>
 
-<div id="app-container" class="auth-mode">
-    <div id="auth-container"></div>
+<div class="container">
+    <!-- AUTHENTICATION BLOCK -->
+    <div id="auth-container">
+        <form id="login-form" class="auth-form"><h2>Đăng Nhập Hệ Thống</h2><input type="email" id="login-email" placeholder="Email" required><input type="password" id="login-password" placeholder="Mật khẩu" required><button type="submit" style="background-color: var(--primary-color);">Đăng Nhập</button><p id="login-error" class="error-message"></p><span id="show-register" class="form-toggle-link">Chưa có tài khoản? Đăng ký</span></form>
+        <form id="register-form" class="auth-form"><h2>Đăng Ký Tài Khoản</h2><input type="email" id="register-email" placeholder="Email" required><input type="password" id="register-password" placeholder="Mật khẩu (ít nhất 6 ký tự)" required><button type="submit" style="background-color: var(--info-color);">Đăng Ký</button><p id="register-error" class="error-message"></p><span id="show-login" class="form-toggle-link">Đã có tài khoản? Đăng nhập</span></form>
+    </div>
 
-    <div id="app" style="display: none;">
-        <button class="menu-toggle" id="menu-toggle">&#9776;</button>
-        <div class="app-layout">
-            <nav class="sidebar" id="sidebar">
-                <div class="sidebar-header">QUẢN LÝ</div>
-                <div class="sidebar-nav">
-                    <ul>
-                        <li><a href="#dashboard" class="nav-link active">Cửa hàng</a></li>
-                        <li><a href="#inventory" class="nav-link">Kho hàng</a></li>
-                        <li><a href="#sales" class="nav-link">Bán hàng</a></li>
-                    </ul>
-                </div>
-                <div class="sidebar-footer">
-                    <p id="sidebar-user-email" style="font-size: 0.9em; text-align: center; word-break: break-all;"></p>
-                    <button id="logout-button" class="btn-danger" style="width: 100%;">Đăng xuất</button>
-                </div>
-            </nav>
+    <!-- MAIN APP BLOCK -->
+    <div id="app">
+        <div id="user-info"><p>Xin chào, <strong id="user-email"></strong>!</p><button id="logout-button" style="background-color:var(--danger-color); width:auto;">Đăng xuất</button></div>
 
-            <main class="main-content">
-                <section id="page-dashboard" class="page active"></section>
-                <section id="page-inventory" class="page"></section>
-                <section id="page-sales" class="page"></section>
-            </main>
+        <h1>Bảng Điều Khiển</h1>
+        <div class="main-actions">
+            <button onclick="openModal('sales-modal')" style="background-color: var(--primary-color);">Tạo Đơn Hàng</button>
+            <button onclick="openModal('inventory-modal')" style="background-color: var(--secondary-color);">Quản Lý Kho Hàng</button>
+            <button onclick="openModal('history-modal')" style="background-color: var(--info-color);">Lịch Sử Giao Dịch</button>
+            <button onclick="openModal('revenue-report-modal')" style="background-color: var(--warning-color);">Báo Cáo Doanh Thu</button>
+        </div>
+
+        <h2>Thống Kê Nhanh</h2>
+        <div class="stats-grid">
+             <div class="stat-item stat-info"><p>Đơn hàng hôm nay</p><strong id="daily-orders">0</strong></div>
+             <div class="stat-item stat-info"><p>Đơn hàng tuần này</p><strong id="weekly-orders">0</strong></div>
+             <div class="stat-item stat-info"><p>Đơn hàng tháng này</p><strong id="monthly-orders">0</strong></div>
+             <div class="stat-item stat-cost"><p>Vốn nhập trong ngày</p><strong id="daily-cost">0 đ</strong></div>
+            <div class="stat-item stat-info"><p>Sản phẩm trong kho</p><strong id="total-products">0</strong></div>
+            <div class="stat-item stat-info"><p>Tổng số nhân viên</p><strong id="total-staff">0</strong></div>
+        </div>
+
+        <h2>Thống Kê Tài Chính</h2>
+        <div class="stats-grid">
+            <div class="stat-item stat-profit"><p>Tổng Lợi nhuận</p><strong id="total-profit">0 đ</strong></div>
+            <div class="stat-item stat-revenue"><p>Tổng Doanh thu</p><strong id="total-revenue">0 đ</strong></div>
+            <div class="stat-item stat-cost"><p>Tổng Vốn nhập</p><strong id="total-cost">0 đ</strong></div>
+            <div class="stat-item stat-warning"><p>Giá trị kho hàng</p><strong id="inventory-value">0 đ</strong></div>
+        </div>
+
+        <div class="grid-container">
+            <div class="management-section">
+                <h2>Quản lý & Báo cáo</h2>
+                <button onclick="openModal('staff-modal')" style="background-color: var(--secondary-color);">Quản lý Nhân Viên</button>
+                <button onclick="openModal('staff-report-modal')" style="background-color: var(--success-color); margin-top: 10px;">Báo Cáo Doanh Số NV</button>
+                <button onclick="openModal('category-modal')" style="background-color: var(--info-color); margin-top: 10px;">Quản lý Danh mục & SP</button>
+            </div>
+            <div class="management-section">
+                <h2>Thông tin thanh toán (VietQR)</h2>
+                <form id="payment-info-form">
+                    <input type="text" id="beneficiary-name" placeholder="Tên người thụ hưởng" required>
+                    <input type="text" id="account-number" placeholder="Số tài khoản" required>
+                    <select id="bank-select" required><option value="">Đang tải danh sách ngân hàng...</option></select>
+                    <button type="submit" style="background-color: var(--primary-color);">Lưu Thông Tin</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="danger-zone">
+            <h3>Khu Vực Nguy Hiểm</h3>
+            <p>Hành động này sẽ xóa vĩnh viễn tất cả dữ liệu sản phẩm, nhân viên và lịch sử giao dịch. Không thể hoàn tác.</p>
+            <button id="reset-data-btn" style="background-color: var(--danger-color);">Reset Toàn Bộ Dữ Liệu</button>
         </div>
     </div>
 </div>
 
-<div id="import-goods-modal" class="modal">
-    <div class="modal-content large">
-        <div class="modal-header"><h2>Form Nhập Hàng Theo Lô</h2><span class="close-btn">&times;</span></div>
-        <form id="import-form">
-            <div id="import-item-rows"></div>
-            <button type="button" id="add-import-item-btn" class="btn-secondary" style="width: auto; margin-top:10px;">+ Thêm dòng</button>
-            <hr>
-            <button type="submit" class="btn-success" style="width: 100%;">Xác Nhận Nhập Hàng</button>
-        </form>
+<!-- MODALS -->
+
+<!-- Inventory Modal -->
+<div id="inventory-modal" class="modal"><div class="modal-content large"><div class="modal-header"><h2>Quản lý Kho Hàng</h2><span class="close">&times;</span></div><div class="modal-body">
+    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 15px; margin-bottom: 15px;">
+        <select id="inventory-category-filter"><option value="">-- Lọc theo danh mục --</option></select>
+        <input type="text" id="inventory-search-input" placeholder="Tìm kiếm theo Tên hoặc Mã hàng...">
     </div>
-</div>
+    <button onclick="openModal('import-goods-modal')" style="background-color: var(--success-color);">[+] Nhập Hàng Mới</button><div style="overflow-x: auto;"><table><thead><tr><th>Tên sản phẩm</th><th>Mã hàng</th><th>Giá nhập</th><th>Giá bán</th><th>Danh mục</th><th>Tồn kho</th><th>Đã bán</th><th>Hành động</th></tr></thead><tbody id="inventory-list-table"></tbody></table></div></div></div></div>
+
+<!-- Edit Product Modal -->
+<div id="edit-product-modal" class="modal"><div class="modal-content"><div class="modal-header"><h2>Chỉnh Sửa Sản Phẩm</h2><span class="close">&times;</span></div><div class="modal-body"><form id="edit-product-form"><input type="hidden" id="edit-product-id"><input type="text" id="edit-product-name" placeholder="Tên sản phẩm" required><input type="text" id="edit-product-code" placeholder="Mã hàng"><input type="number" id="edit-import-price" placeholder="Giá nhập" required><input type="number" id="edit-sell-price" placeholder="Giá bán" required><select id="edit-category" required></select><button type="submit" style="background-color:var(--primary-color);">Lưu Thay Đổi</button></form></div></div></div>
+
+<!-- Sales Modal -->
+<div id="sales-modal" class="modal"><div class="modal-content large"><div class="modal-header"><h2>Tạo Đơn Hàng Mới</h2><span class="close">&times;</span></div><div class="modal-body"><form id="sales-form"><h3>1. Thông tin khách hàng</h3><input type="tel" id="customer-phone" placeholder="SĐT Khách hàng (Bắt buộc)" required><input type="text" id="customer-name" placeholder="Tên khách hàng" required><h3>2. Thêm sản phẩm vào đơn</h3><div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end;"><select id="sales-category-select"><option value="">-- Chọn danh mục --</option></select><select id="sales-product-select"><option value="">-- Chọn danh mục trước --</option></select><button type="button" id="add-to-cart-btn" style="width: auto; background-color: var(--primary-color);">Thêm</button></div><div id="sales-product-info" style="display:none; padding: 10px; background: #f0f8ff; border-radius: 5px; margin: 10px 0;"><p style="margin: 0;">Tồn kho: <strong id="sales-inventory-stock"></strong> | Giá bán: <strong id="sales-price"></strong></p></div><h3>3. Sản phẩm trong đơn hàng</h3><div style="overflow-x: auto;"><table><thead><tr><th>Sản phẩm</th><th>SL</th><th>Đơn giá</th><th>Thành tiền</th><th>Xóa</th></tr></thead><tbody id="sales-cart-items"></tbody></table></div><h3>4. Hoàn tất</h3><select id="sales-staff" required><option value="">-- Chọn nhân viên bán hàng --</option></select><select id="payment-method" required><option value="Tiền mặt">Tiền mặt</option><option value="Chuyển khoản">Chuyển khoản</option></select><p style="font-size: 1.2em; text-align: right;"><strong>Tổng cộng: <span id="sales-total">0 đ</span></strong></p><button type="submit" style="background-color: var(--primary-color);">Tiến Hành Thanh Toán</button></form></div></div></div>
+
+<!-- Import Modal -->
+<div id="import-goods-modal" class="modal"><div class="modal-content large"><div class="modal-header"><h2>Nhập Hàng Vào Kho</h2><span class="close">&times;</span></div><div class="modal-body"><form id="import-form"><h3>1. Thêm sản phẩm vào phiếu nhập</h3><div style="border: 1px solid #ccc; padding: 15px; border-radius: 5px;"><div style="display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center;"><select id="import-category-select" required><option value="">-- Chọn danh mục --</option></select><button type="button" id="add-new-category-import-btn" style="width: auto; padding: 0 15px;">+</button></div><select id="import-product-select" required><option value="">-- Chọn danh mục trước --</option></select><div id="new-product-fields" style="display:none; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #ccc;"><h4>Thông tin sản phẩm mới</h4><input type="text" id="new-product-name" placeholder="Tên sản phẩm mới"><input type="text" id="new-product-code" placeholder="Mã hàng (Tùy chọn)"><input type="number" id="new-import-price" placeholder="Giá nhập"><input type="number" id="new-sell-price" placeholder="Giá bán"></div><label>Số lượng nhập:</label><input type="number" id="import-quantity-input" min="1"><button type="button" id="add-to-import-list-btn" style="background-color: var(--primary-color);">Thêm vào phiếu</button></div><h3>2. Danh sách sản phẩm chuẩn bị nhập kho</h3><table><thead><tr><th>Sản phẩm</th><th>Số lượng</th><th>Hành động</th></tr></thead><tbody id="import-list-table"></tbody></table><button type="submit" id="confirm-import-btn" style="background-color:var(--success-color); margin-top: 20px;" disabled>Xác nhận và Nhập Kho</button></form></div></div></div>
+
+<!-- Staff Management Modal -->
+<div id="staff-modal" class="modal"><div class="modal-content large"><div class="modal-header"><h2>Quản lý Nhân viên</h2><span class="close">&times;</span></div><div class="modal-body"><h3>Thêm / Chỉnh sửa nhân viên</h3><form id="add-staff-form" style="display:flex; flex-wrap:wrap; gap:10px;"><input type="hidden" id="staff-id"><input type="text" id="staff-name" placeholder="Tên nhân viên" required style="flex:1 1 200px;"><input type="number" id="staff-commission" placeholder="Hoa hồng (%)" required min="0" step="0.1" style="flex:1 1 120px;"><div style="flex:1 1 100%; display:flex; gap:10px;"><button type="submit" style="background-color: var(--primary-color); flex-grow:1;">Lưu</button><button type="button" id="clear-staff-form-btn" style="background-color: var(--secondary-color); flex-grow:1;">Làm mới</button></div></form><h3>Danh sách nhân viên</h3><div style="overflow-x: auto;"><table><thead><tr><th>Tên Nhân Viên</th><th>Hoa hồng (%)</th><th>Hành Động</th></tr></thead><tbody id="staff-list-table"></tbody></table></div></div></div></div>
+
+<!-- Category Management Modal -->
+<div id="category-modal" class="modal"><div class="modal-content large"><div class="modal-header"><h2>Quản lý Danh mục & Sản phẩm</h2><span class="close">&times;</span></div><div class="modal-body"><h3>Thêm danh mục mới</h3><form id="add-category-form" style="display: flex; gap: 10px;"><input type="text" id="category-name" placeholder="Tên danh mục" required><button type="submit" style="background-color: var(--primary-color); width: 30%;">Thêm</button></form><h3>Danh sách danh mục (click để xem sản phẩm)</h3><div style="overflow-x: auto;"><table><thead><tr><th>Tên Danh Mục</th><th>Số SP</th><th>Hành Động</th></tr></thead><tbody id="category-list-table"></tbody></table></div></div></div></div>
+
+<!-- Transaction History Modal -->
+<div id="history-modal" class="modal"><div class="modal-content large"><div class="modal-header"><h2>Lịch Sử Giao Dịch</h2><span class="close">&times;</span></div><div class="modal-body"><input type="text" id="history-search-input" placeholder="Tìm theo Mã ĐH, SĐT KH, Tên SP, Tên NV..."><div class="tabs"><div class="tab-link active" onclick="openTab(event, 'export-history')">Lịch Sử Xuất Hàng</div><div class="tab-link" onclick="openTab(event, 'import-history')">Lịch Sử Nhập Hàng</div></div><div id="export-history" class="tab-content active"><div style="overflow-x: auto;"><table><thead><tr><th>Thời gian</th><th>Mã ĐH</th><th>Chi tiết</th><th>Nhân viên</th><th>Khách hàng</th><th>Tổng tiền</th></tr></thead><tbody id="export-history-table"></tbody></table></div></div><div id="import-history" class="tab-content"><div style="overflow-x: auto;"><table><thead><tr><th>Thời gian</th><th>Chi tiết</th><th>Tổng vốn</th></tr></thead><tbody id="import-history-table"></tbody></table></div></div></div></div></div>
+
+<!-- Staff Report Modal -->
+<div id="staff-report-modal" class="modal"><div class="modal-content large"><div class="modal-header"><h2>Báo Cáo Doanh Số Nhân Viên</h2><span class="close">&times;</span></div><div class="modal-body"><button onclick="renderStaffReport()" style="background-color: var(--primary-color); margin-bottom: 15px; width: auto;">Rà soát / Làm mới</button><h3>Bảng tổng hợp</h3><div style="overflow-x: auto;"><table><thead><tr><th>Nhân viên</th><th>Tổng số đơn</th><th>Số đơn (tuần)</th><th>Số đơn (tháng)</th><th>Tổng doanh thu</th><th>Tổng lợi nhuận</th><th>Tỷ lệ HH</th><th>Tiền Hoa hồng</th></tr></thead><tbody id="staff-report-table"></tbody></table></div></div></div></div>
+
+<!-- Revenue Report Modal -->
+<div id="revenue-report-modal" class="modal"><div class="modal-content large"><div class="modal-header"><h2>Báo Cáo Doanh Thu</h2><span class="close">&times;</span></div><div class="modal-body"><form id="revenue-report-form" style="display:flex; gap: 15px; align-items:center; margin-bottom:20px; flex-wrap:wrap;"><div><label for="start-date">Từ ngày:</label><input type="date" id="start-date" required></div><div><label for="end-date">Đến ngày:</label><input type="date" id="end-date" required></div><button type="submit" style="width:auto; padding: 12px 20px;">Xem Báo Cáo</button></form><div id="report-results"></div></div></div></div>
+
+<!-- QR Code Confirmation Modal -->
+<div id="qr-confirm-modal" class="modal"><div class="modal-content" style="text-align: center;"><div class="modal-header"><h2>Xác Nhận Thanh Toán (VietQR)</h2><span class="close">&times;</span></div><div class="modal-body"><img id="qr-code-image" src="" alt="QR Code" style="max-width: 100%; height: auto;"><div id="qr-info" style="margin-top: 15px; text-align: left; background: #f3f3f3; padding: 10px; border-radius: 5px;"><p><strong>Nội dung:</strong> <span id="qr-content"></span></p></div><button id="confirm-payment-btn" style="background-color: var(--success-color); margin-top:20px;">Xác nhận Đã nhận tiền & Hoàn tất</button></div></div></div>
+
+<!-- Custom Alert Modal -->
+<div id="custom-alert-modal" class="modal" style="z-index: 9999;"><div class="modal-content"><div class="modal-header"><h2>Thông Báo</h2><span class="close" style="display: none;">&times;</span></div><div class="modal-body"><p id="custom-alert-message"></p><button id="custom-alert-ok" style="background-color: var(--primary-color); width: 100px; margin: 0 auto; display: block;">OK</button></div></div></div>
+
+
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
 
 <script>
-    // --- 0. CONFIG ---
+    // --- 1. INITIALIZATION & CONFIG ---
     const firebaseConfig = {
         apiKey: "AIzaSyCHjgJkqVmgpZ6s5HRobpqB6XT--Sa2_zY",
         authDomain: "tgapp-30a28.firebaseapp.com",
@@ -133,677 +206,862 @@
         measurementId: "G-68P4PT49B0"
     };
 
-    const showAlert = (icon, title, text) => Swal.fire({ icon, title, text });
-    const showConfirm = (title, text) => Swal.fire({ title, text, icon: 'warning', showCancelButton: true, confirmButtonColor: '#3085d6', cancelButtonColor: '#d33', confirmButtonText: 'Đồng ý', cancelButtonText: 'Hủy bỏ' });
-    const showPrompt = (title, inputLabel, inputType = 'text') => Swal.fire({ title, input: inputType, inputLabel, showCancelButton: true, confirmButtonText: 'Lưu', cancelButtonText: 'Hủy' });
-
-    // --- 1. INITIALIZATION ---
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // Enable offline persistence to help with flaky connections, 
-    // BUT this can sometimes hide real permission errors. 
-    // If issues persist, comment this out to see real network errors.
-    // db.enablePersistence().catch(err => console.warn("Persistence disabled:", err.code));
+    // --- 2. GLOBAL STATE & DOM ELEMENTS ---
+    let allProductsCache = [], allTransactionsCache = [], allCategoriesCache = [], allStaffCache = [], allCustomersCache = [], paymentInfoCache = null;
+    let currentOrderItems = [];
+    let currentImportItems = [];
+    let tempOrderData = null; // For QR confirmation
+    const loader = document.getElementById('loader');
 
-    const loadingOverlay = document.getElementById('loading-overlay');
-    const authContainer = document.getElementById('auth-container');
-    const app = document.getElementById('app');
-
-    let allProductsCache = [], allTransactionsCache = [], allStaffCache = [], shopInfoCache = {}, bankListCache = [], allCategoriesCache = [];
-
-    const showLoading = (message) => {
-        loadingOverlay.querySelector('p').textContent = message || 'Đang xử lý...';
-        loadingOverlay.style.visibility = 'visible';
-        loadingOverlay.style.opacity = '1';
-    };
-    const hideLoading = () => {
-        loadingOverlay.style.opacity = '0';
-        setTimeout(() => { loadingOverlay.style.visibility = 'hidden'; }, 300);
-    };
+    // --- 3. HELPER & UTILITY FUNCTIONS ---
+    const showLoader = (message = "Đang xử lý...") => { loader.querySelector('p').textContent = message; loader.style.display = 'flex'; };
+    const hideLoader = () => { loader.style.display = 'none'; };
+    const formatCurrency = (num) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num || 0);
     
-    async function logActivity(action, details = {}) {
-        try {
-            const user = auth.currentUser;
-            if (!user) return;
-            await db.collection('activity_log').add({ action, details, userEmail: user.email, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
-        } catch (error) { console.warn("Failed to log activity (non-critical):", error); }
+    let activeModal = null;
+    function openModal(modalId) {
+        if (activeModal) closeModal(activeModal);
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'flex';
+            activeModal = modalId;
+            // Specific actions on modal open
+            if(modalId === 'inventory-modal') {
+                populateCategoryDropdown('inventory-category-filter', true);
+                renderInventoryTable();
+            }
+            if(modalId === 'sales-modal') resetSalesForm();
+            if(modalId === 'staff-modal') renderStaffTable();
+            if(modalId === 'history-modal') renderHistoryTables();
+            if(modalId === 'staff-report-modal') renderStaffReport();
+            if(modalId === 'import-goods-modal') resetImportForm();
+            if(modalId === 'category-modal') renderCategoryTable();
+            if(modalId === 'revenue-report-modal') {
+                document.getElementById('end-date').valueAsDate = new Date();
+                const sevenDaysAgo = new Date();
+                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+                document.getElementById('start-date').valueAsDate = sevenDaysAgo;
+                document.getElementById('report-results').innerHTML = '';
+            }
+        }
+    }
+    function closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) modal.style.display = 'none';
+        if (activeModal === modalId) activeModal = null;
+    }
+    function closeAllModals() {
+        document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+        activeModal = null;
     }
 
-    // --- 2. AUTHENTICATION ---
-    auth.onAuthStateChanged(async user => {
+    // Dùng cho các thông báo thành công hoặc lỗi nghiêm trọng, sẽ đóng các form đang mở.
+    const showAlert = (message, callback) => {
+        closeAllModals();
+        document.getElementById('custom-alert-message').textContent = message;
+        const modal = document.getElementById('custom-alert-modal');
+        modal.style.display = 'flex';
+        activeModal = 'custom-alert-modal';
+        document.getElementById('custom-alert-ok').onclick = () => {
+             closeModal('custom-alert-modal');
+             if (callback) callback();
+        };
+    };
+
+    // Dùng cho các lỗi nhập liệu trên form, sẽ KHÔNG đóng form đang mở.
+    const showFormError = (message) => {
+        const previousActiveModal = activeModal; // Lưu lại form đang mở
+        document.getElementById('custom-alert-message').textContent = message;
+        const alertModal = document.getElementById('custom-alert-modal');
+        alertModal.style.display = 'flex';
+        activeModal = 'custom-alert-modal'; // Thông báo lỗi trở thành modal active
+
+        document.getElementById('custom-alert-ok').onclick = () => {
+             closeModal('custom-alert-modal');
+             activeModal = previousActiveModal; // Trả lại trạng thái active cho form trước đó
+        };
+    };
+
+
+    function openTab(evt, tabName) {
+        document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+        document.querySelectorAll('.tab-link').forEach(tl => tl.classList.remove('active'));
+        document.getElementById(tabName).classList.add('active');
+        evt.currentTarget.classList.add('active');
+    }
+
+    // --- 4. AUTHENTICATION ---
+    auth.onAuthStateChanged(user => {
         if (user) {
-            document.getElementById('app-container').classList.remove('auth-mode');
-            authContainer.style.display = 'none';
-            app.style.display = 'block';
-            document.getElementById('sidebar-user-email').textContent = user.email;
-            await loadInitialData();
+            document.getElementById('auth-container').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+            document.getElementById('user-email').textContent = user.email;
+            loadInitialData();
         } else {
-            hideLoading();
-            document.getElementById('app-container').classList.add('auth-mode');
-            authContainer.style.display = 'block';
-            app.style.display = 'none';
-            renderAuthUI();
+            document.getElementById('auth-container').style.display = 'block';
+            document.getElementById('app').style.display = 'none';
+            hideLoader();
         }
     });
+    
+    document.getElementById('login-form').addEventListener('submit', (e) => { e.preventDefault(); showLoader("Đang đăng nhập..."); auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-password').value).catch(err => { document.getElementById('login-error').textContent = "Email hoặc mật khẩu không đúng."; hideLoader(); }); });
+    document.getElementById('register-form').addEventListener('submit', (e) => { e.preventDefault(); showLoader("Đang tạo tài khoản..."); auth.createUserWithEmailAndPassword(document.getElementById('register-email').value, document.getElementById('register-password').value).catch(err => { document.getElementById('register-error').textContent = err.message; hideLoader(); }); });
+    document.getElementById('show-register').addEventListener('click', () => { document.getElementById('login-form').style.display = 'none'; document.getElementById('register-form').style.display = 'block'; });
+    document.getElementById('show-login').addEventListener('click', () => { document.getElementById('register-form').style.display = 'none'; document.getElementById('login-form').style.display = 'block'; });
+    document.getElementById('logout-button').addEventListener('click', () => auth.signOut());
 
-    function renderAuthUI() { 
-        authContainer.innerHTML = `
-            <form id="login-form" style="max-width: 400px; margin: 50px auto; padding: 25px; border-radius: 8px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                <h2 style="text-align: center; color: var(--primary-color);">Đăng Nhập</h2>
-                <input type="email" id="login-email" placeholder="Email" required><input type="password" id="login-password" placeholder="Mật khẩu" required>
-                <button type="submit" class="btn-primary" style="width:100%;">Đăng Nhập</button>
-                <p id="login-error" style="color:red; text-align:center; min-height: 1em;"></p>
-                <span id="show-register" style="color: var(--primary-color); cursor: pointer; display: block; text-align: center; margin-top: 15px;">Chưa có tài khoản? Đăng ký</span>
-            </form>
-            <form id="register-form" style="display:none; max-width: 400px; margin: 50px auto; padding: 25px; border-radius: 8px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                <h2 style="text-align: center; color: var(--info-color);">Đăng Ký</h2>
-                <input type="email" id="register-email" placeholder="Email" required><input type="password" id="register-password" placeholder="Mật khẩu (ít nhất 6 ký tự)" required>
-                <button type="submit" class="btn-primary" style="background-color: var(--info-color); width:100%;">Đăng Ký</button>
-                <p id="register-error" style="color:red; text-align:center; min-height: 1em;"></p>
-                <span id="show-login" style="color: var(--primary-color); cursor: pointer; display: block; text-align: center; margin-top: 15px;">Đã có tài khoản? Đăng nhập</span>
-            </form>`;
-        
-        document.getElementById('show-register').addEventListener('click', () => { document.getElementById('login-form').style.display = 'none'; document.getElementById('register-form').style.display = 'block'; });
-        document.getElementById('show-login').addEventListener('click', () => { document.getElementById('register-form').style.display = 'none'; document.getElementById('login-form').style.display = 'block'; });
-        
-        document.getElementById('register-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('register-email').value; const password = document.getElementById('register-password').value;
-            showLoading('Đang tạo tài khoản...');
-            try {
-                await auth.createUserWithEmailAndPassword(email, password);
-                await logActivity("USER_REGISTER", { email: email });
-            } catch(err) {
-                document.getElementById('register-error').textContent = err.message;
-            } finally { hideLoading(); }
-        });
-
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('login-email').value; const password = document.getElementById('login-password').value;
-            showLoading('Đang đăng nhập...');
-            try {
-                await auth.signInWithEmailAndPassword(email, password);
-                // Activity log will be called in onAuthStateChanged if successful
-            } catch(err) {
-                hideLoading();
-                console.error("Login failed:", err);
-                document.getElementById('login-error').textContent = "Email hoặc mật khẩu không đúng (" + err.code + ")";
-            }
-        });
-    }
-
-    document.getElementById('logout-button').addEventListener('click', async () => { 
-        const result = await showConfirm('Xác nhận đăng xuất?', 'Bạn sẽ được chuyển về màn hình đăng nhập.');
-        if (result.isConfirmed) {
-            await logActivity("USER_LOGOUT");
-            auth.signOut();
-        }
-    });
-
-    // --- 3. CORE DATA LOADING & RENDERING ---
+    // --- 5. CORE DATA LOADING & RENDERING ---
     async function loadInitialData() {
-        showLoading('Đang tải dữ liệu từ máy chủ...');
+        showLoader("Đang tải dữ liệu...");
         try {
-            if (bankListCache.length === 0) {
-                try {
-                    const response = await fetch('https://api.vietqr.io/v2/banks');
-                    const data = await response.json();
-                    bankListCache = data.data || [];
-                } catch (e) { console.warn("Could not load bank list", e); }
-            }
-
-            // CRITICAL FIX: Do not swallow errors here.
-            await Promise.all([
-                loadCollection('products', 'name', 'allProductsCache'),
-                loadCollection('transactions', 'timestamp', 'allTransactionsCache', true),
-                loadCollection('staff', 'name', 'allStaffCache'),
-                loadShopInfo()
+            const [p, t, c, s, cust, paymentInfo] = await Promise.all([
+                db.collection('products').orderBy('name').get(),
+                db.collection('transactions').orderBy('timestamp', 'desc').get(),
+                db.collection('categories').orderBy('name').get(),
+                db.collection('staff').orderBy('name').get(),
+                db.collection('customers').get(),
+                db.collection('settings').doc('paymentInfo').get()
             ]);
-            
-            // Update categories dynamically
-            const categories = new Set(allProductsCache.map(p => p.category).filter(Boolean));
-            allCategoriesCache = Array.from(categories).sort();
+            allProductsCache = p.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            allTransactionsCache = t.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            allCategoriesCache = c.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            allStaffCache = s.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            allCustomersCache = cust.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            paymentInfoCache = paymentInfo.exists ? paymentInfo.data() : null;
 
-            console.log("Data loaded successfully:", { 
-                products: allProductsCache.length, 
-                transactions: allTransactionsCache.length, 
-                staff: allStaffCache.length,
-                categories: allCategoriesCache
-            });
-
-            renderAllPages();
-            
-            // Stay on current page if possible, else go to dashboard
-            const hash = window.location.hash.substring(1);
-            if (hash && ['dashboard', 'inventory', 'sales'].includes(hash)) {
-                showPage(hash);
-            } else {
-                showPage('dashboard');
-            }
-
+            updateDashboardStats();
+            loadPaymentInfo(paymentInfoCache);
+            populateCategoryDropdown('sales-category-select', true);
         } catch (error) {
-            console.error("CRITICAL DATA LOADING ERROR:", error);
-            let errorMsg = error.message;
-            if (error.code === 'permission-denied') {
-                errorMsg = 'Tài khoản của bạn không có quyền truy cập dữ liệu này. Vui lòng kiểm tra "Firestore Rules" trong Firebase Console.';
-            }
-            showAlert('error', 'Lỗi tải dữ liệu!', errorMsg);
+            console.error("Lỗi khi tải dữ liệu:", error);
+            showAlert("Không thể tải dữ liệu từ server. Vui lòng kiểm tra lại kết nối.");
         } finally {
-            hideLoading();
+            hideLoader();
         }
-    }
-
-    async function loadCollection(name, orderBy, cacheKey, desc = false) {
-        // CRITICAL FIX: Better error reporting
-        try {
-            const query = db.collection(name).orderBy(orderBy, desc ? 'desc' : 'asc');
-            const snapshot = await query.get();
-            window[cacheKey] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        } catch (error) {
-            console.error(`Error loading collection [${name}]:`, error);
-            if (error.code === 'permission-denied') {
-                throw error; // Re-throw to be caught by loadInitialData and shown to user
-            }
-            // Only ignore if it's just missing (e.g. new app)
-            console.warn(`Collection [${name}] might not exist yet or other non-critical error.`);
-            window[cacheKey] = [];
-        }
-    }
-
-    async function loadShopInfo() { 
-        try {
-            const doc = await db.collection('settings').doc('shopInfo').get();
-            shopInfoCache = doc.exists ? doc.data() : {};
-        } catch (e) {
-            console.warn("Could not load shop info:", e);
-            shopInfoCache = {};
-        }
-    }
-
-    async function renderActivityLog() { 
-        const listEl = document.querySelector('#page-dashboard #activity-log-list');
-        if(!listEl) return;
-        try {
-            // Only try to load if we have permission
-            const snapshot = await db.collection('activity_log').orderBy('timestamp', 'desc').limit(15).get();
-            if (snapshot.empty) {
-                listEl.innerHTML = '<li>Chưa có hoạt động nào.</li>';
-                return;
-            }
-            listEl.innerHTML = snapshot.docs.map(doc => {
-                const data = doc.data();
-                // Handle cases where timestamp might be null immediately after write
-                const timeStr = data.timestamp ? new Date(data.timestamp.toDate()).toLocaleString('vi-VN') : 'Vừa xong';
-                return `<li><strong>${data.userEmail || 'Ẩn danh'}</strong> ${data.action} - <em>${timeStr}</em></li>`;
-            }).join('');
-        } catch (e) {
-            console.warn("Could not render activity log (likely permission issue):", e);
-            listEl.innerHTML = '<li style="color: orange;">Không thể tải lịch sử (Kiểm tra Rules).</li>';
-        }
-    }
-
-    function renderAllPages() {
-        renderDashboardPage();
-        renderInventoryPage();
-        renderSalesPage();
-        attachAllEventListeners();
-    }
-
-    // --- 4. NAVIGATION ---
-    function showPage(pageId) { 
-        document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
-        const targetPage = document.getElementById('page-' + pageId);
-        if (targetPage) {
-            targetPage.classList.add('active');
-            document.querySelectorAll('.nav-link').forEach(link => {
-                link.classList.remove('active');
-                if (link.getAttribute('href') === '#' + pageId) link.classList.add('active');
-            });
-        }
-        if(window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('open');
     }
     
-    // --- 5. PAGE: DASHBOARD ---
-    function renderDashboardPage() {
-        const page = document.getElementById('page-dashboard');
-        let totalRevenue = 0, totalCost = 0, totalProfit = 0;
-        // Recalculate stats from cache
+    function updateDashboardStats() {
+        const now = new Date();
+        const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const dayOfWeek = now.getDay();
+        const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+        let totalRevenue = 0, totalCost = 0, totalProfit = 0, dailyOrders = 0, weeklyOrders = 0, monthlyOrders = 0, dailyCost = 0;
+        
         allTransactionsCache.forEach(t => {
-            if(t.type === 'export') {
-                totalRevenue += t.totalAmount || 0;
+            const tDate = t.timestamp ? t.timestamp.toDate() : null;
+            if (t.type === 'export') {
+                totalRevenue += t.totalRevenue || 0;
                 totalProfit += t.totalProfit || 0;
-            } else if (t.type === 'import') {
-                totalCost += t.totalAmount || 0;
+                if (tDate && tDate >= startOfDay) dailyOrders++;
+                if (tDate && tDate >= startOfWeek) weeklyOrders++;
+                if (tDate && tDate >= startOfMonth) monthlyOrders++;
+            } else { // import
+                const cost = t.totalCost || 0;
+                totalCost += cost;
+                if (tDate && tDate >= startOfDay) {
+                    dailyCost += cost;
+                }
             }
         });
-        
-        // Simple stats for today
-        const now = new Date();
-        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const ordersToday = allTransactionsCache.filter(t => t.type === 'export' && t.timestamp && t.timestamp.toDate() >= startOfToday).length;
 
-        const bank = bankListCache.find(b => b.bin === shopInfoCache.bankBin);
+        const inventoryValue = allProductsCache.reduce((sum, p) => sum + ((p.inventory || 0) * (p.importPrice || 0)), 0);
 
-        page.innerHTML = `
-            <div class="page-header"><h1>Tổng Quan Cửa Hàng</h1></div>
-            <div class="card"><h2>Thống Kê Nhanh</h2><div class="stats-grid">
-                <div class="stat-item"><div class="label">Đơn hôm nay</div><div class="value">${ordersToday}</div></div>
-                <div class="stat-item"><div class="label">Tổng Sản Phẩm</div><div class="value">${allProductsCache.length}</div></div>
-                <div class="stat-item"><div class="label">Tổng Nhân Viên</div><div class="value">${allStaffCache.length}</div></div>
-            </div></div>
-            <div class="card"><h2>Tài Chính (Tạm tính)</h2><div class="stats-grid">
-                <div class="stat-item"><div class="label">Tổng Lợi nhuận</div><div class="value profit">${totalProfit.toLocaleString('vi-VN')} đ</div></div>
-                <div class="stat-item"><div class="label">Tổng Doanh thu</div><div class="value">${totalRevenue.toLocaleString('vi-VN')} đ</div></div>
-                <div class="stat-item"><div class="label">Vốn Nhập Hàng</div><div class="value cost">${totalCost.toLocaleString('vi-VN')} đ</div></div>
-            </div></div>
-             <div class="card">
-                <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2>Quản Lý Nhân Viên</h2>
-                    <button id="add-staff-btn" class="btn-success">Thêm Nhân Viên</button>
-                </div>
-                <div style="overflow-x: auto;">
-                    <table id="staff-table">
-                        <thead><tr><th>Tên Nhân Viên</th><th style="width: 120px;">Hành Động</th></tr></thead>
-                        <tbody id="staff-list-table"></tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="card">
-                <div style="display:flex; justify-content: space-between; align-items: center;"><h2>Thông Tin Thanh Toán (VietQR)</h2><button id="edit-shop-info-btn" class="btn-primary">Chỉnh sửa</button></div>
-                <p><strong>Người thụ hưởng:</strong> <span>${shopInfoCache.beneficiaryName || 'Chưa cập nhật'}</span></p>
-                <p><strong>Số tài khoản:</strong> <span>${shopInfoCache.bankAccountNo || 'Chưa cập nhật'}</span></p>
-                <p><strong>Ngân hàng:</strong> <span>${bank ? bank.shortName : 'Chưa cập nhật'}</span></p>
-            </div>
-            <div class="card"><h2>Lịch sử Hoạt động Gần đây</h2><div style="max-height: 300px; overflow-y: auto;"><ul id="activity-log-list"></ul></div></div>`;
-        renderActivityLog();
-        renderStaffTable();
+        document.getElementById('daily-orders').textContent = dailyOrders;
+        document.getElementById('weekly-orders').textContent = weeklyOrders;
+        document.getElementById('monthly-orders').textContent = monthlyOrders;
+        document.getElementById('daily-cost').textContent = formatCurrency(dailyCost);
+        document.getElementById('total-products').textContent = allProductsCache.length;
+        document.getElementById('total-staff').textContent = allStaffCache.length;
+        document.getElementById('total-profit').textContent = formatCurrency(totalProfit);
+        document.getElementById('total-revenue').textContent = formatCurrency(totalRevenue);
+        document.getElementById('total-cost').textContent = formatCurrency(totalCost);
+        document.getElementById('inventory-value').textContent = formatCurrency(inventoryValue);
+    }
+    
+    // --- 6. FEATURE-SPECIFIC LOGIC ---
+    // ** Category Management **
+    document.getElementById('add-category-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const nameInput = document.getElementById('category-name');
+        const name = nameInput.value.trim();
+        if (!name) return;
+        showLoader();
+        try {
+            await db.collection('categories').add({ name });
+            showAlert("Thêm danh mục thành công!", () => {
+                nameInput.value = '';
+                loadInitialData().then(() => renderCategoryTable());
+            });
+        } catch (error) {
+            hideLoader();
+            showAlert("Lỗi: " + error.message);
+        }
+    });
+
+    function renderCategoryTable() {
+        const tableBody = document.getElementById('category-list-table');
+        tableBody.innerHTML = allCategoriesCache.map(cat => {
+            const productCount = allProductsCache.filter(p => p.category === cat.name).length;
+            return `
+            <tr class="category-row" id="cat-row-${cat.id}">
+                <td style="cursor: pointer;" onclick="toggleCategoryProducts('${cat.id}', '${cat.name}')">${cat.name}</td>
+                <td>${productCount}</td>
+                <td class="action-buttons">
+                    <button onclick="editCategory('${cat.id}', '${cat.name}')" style="background-color: var(--warning-color);">Sửa</button>
+                    <button onclick="deleteCategory('${cat.id}', '${cat.name}')" style="background-color: var(--danger-color);">Xóa</button>
+                </td>
+            </tr>
+            <tr class="category-product-list" id="cat-products-${cat.id}"><td colspan="3">Đang tải sản phẩm...</td></tr>
+        `}).join('');
+    }
+    window.toggleCategoryProducts = (catId, catName) => {
+        const productRow = document.getElementById(`cat-products-${catId}`);
+        const catRow = document.getElementById(`cat-row-${catId}`);
+        const isVisible = productRow.style.display === 'table-row';
+
+        document.querySelectorAll('.category-product-list').forEach(row => row.style.display = 'none');
+        document.querySelectorAll('.category-row').forEach(row => row.classList.remove('active'));
+
+        if (!isVisible) {
+            productRow.style.display = 'table-row';
+            catRow.classList.add('active');
+            const products = allProductsCache.filter(p => p.category === catName);
+            const content = products.length > 0 ? 
+                `<ul>${products.map(p => `<li>${p.name} (Tồn: ${p.inventory})</li>`).join('')}</ul>` : 
+                `<p style="padding: 10px;">Không có sản phẩm nào trong danh mục này.</p>`;
+            productRow.querySelector('td').innerHTML = content;
+        }
+    };
+    window.editCategory = async (id, oldName) => {
+        const newName = prompt("Nhập tên danh mục mới:", oldName);
+        if (newName && newName.trim() && newName.trim() !== oldName) {
+            showLoader("Đang cập nhật danh mục...");
+            try {
+                const productsToUpdate = allProductsCache.filter(p => p.category === oldName);
+                const batch = db.batch();
+                // Update category document
+                const catRef = db.collection('categories').doc(id);
+                batch.update(catRef, { name: newName.trim() });
+                // Update all products in that category
+                productsToUpdate.forEach(p => {
+                    const productRef = db.collection('products').doc(p.id);
+                    batch.update(productRef, { category: newName.trim() });
+                });
+                await batch.commit();
+                showAlert("Cập nhật danh mục thành công!", () => {
+                    loadInitialData().then(() => {
+                        openModal('category-modal');
+                    });
+                });
+            } catch (error) {
+                hideLoader();
+                showAlert("Lỗi khi cập nhật: " + error.message);
+            }
+        }
+    };
+    window.deleteCategory = async (id, name) => {
+        const used = allProductsCache.some(p => p.category === name);
+        if(used) {
+            showAlert(`Không thể xóa danh mục "${name}" vì vẫn còn sản phẩm thuộc danh mục này.`);
+            return;
+        }
+        if (confirm(`Bạn có chắc muốn xóa danh mục "${name}" không?`)) {
+            showLoader();
+            try {
+                await db.collection('categories').doc(id).delete();
+                showAlert("Xóa danh mục thành công!", () => loadInitialData().then(() => renderCategoryTable()));
+            } catch (error) {
+                hideLoader();
+                showAlert("Lỗi: " + error.message);
+            }
+        }
+    };
+
+    // ** Payment Info (VietQR) **
+    async function fetchBankList() {
+        try {
+            const response = await fetch('https://api.vietqr.io/v2/banks');
+            const data = await response.json();
+            if(data.code === '00') {
+                const bankSelect = document.getElementById('bank-select');
+                bankSelect.innerHTML = '<option value="">-- Chọn ngân hàng --</option>' + data.data.map(bank => 
+                    `<option value="${bank.bin}">${bank.shortName} - ${bank.name}</option>`
+                ).join('');
+            }
+        } catch (error) { console.error("Lỗi khi tải danh sách ngân hàng:", error); document.getElementById('bank-select').innerHTML = '<option value="">Không tải được danh sách</option>'; }
     }
 
-    // --- 5.1 STAFF MANAGEMENT ---
+    function loadPaymentInfo(data) {
+        if (data) {
+            document.getElementById('beneficiary-name').value = data.beneficiaryName || '';
+            document.getElementById('account-number').value = data.accountNumber || '';
+            const bankSelect = document.getElementById('bank-select');
+            const checkOptions = () => { if (bankSelect.options.length > 1) { bankSelect.value = data.bankBin || ''; } };
+            if (bankSelect.options.length > 1) { checkOptions(); } 
+            else { const observer = new MutationObserver(() => { checkOptions(); observer.disconnect(); }); observer.observe(bankSelect, { childList: true }); }
+        }
+    }
+    
+    document.getElementById('payment-info-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        showLoader();
+        const bankSelect = document.getElementById('bank-select');
+        const selectedOption = bankSelect.options[bankSelect.selectedIndex];
+        const data = {
+            beneficiaryName: document.getElementById('beneficiary-name').value,
+            accountNumber: document.getElementById('account-number').value,
+            bankBin: document.getElementById('bank-select').value,
+            bankInfo: selectedOption.text
+        };
+        try {
+            await db.collection('settings').doc('paymentInfo').set(data);
+            paymentInfoCache = data;
+            showAlert("Lưu thông tin thanh toán thành công!");
+        } catch (error) { showAlert("Lỗi: " + error.message); } 
+        finally { hideLoader(); }
+    });
+
+    // ** Staff Management **
+    document.getElementById('add-staff-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('staff-id').value;
+        const name = document.getElementById('staff-name').value.trim();
+        const commissionRate = parseFloat(document.getElementById('staff-commission').value);
+
+        if (!name || isNaN(commissionRate)) { showFormError("Vui lòng nhập đầy đủ thông tin."); return; }
+        showLoader();
+        try {
+            const staffData = { name, commissionRate };
+            if (id) { await db.collection('staff').doc(id).update(staffData); } 
+            else { await db.collection('staff').add(staffData); }
+            showAlert("Lưu thông tin nhân viên thành công!", () => { 
+                document.getElementById('add-staff-form').reset(); 
+                loadInitialData().then(() => renderStaffTable()); 
+            });
+        } catch (error) { hideLoader(); showAlert("Lỗi: " + error.message); }
+    });
+    document.getElementById('clear-staff-form-btn').addEventListener('click', () => { document.getElementById('add-staff-form').reset(); document.getElementById('staff-id').value = ''; });
     function renderStaffTable() {
         const tableBody = document.getElementById('staff-list-table');
-        if (!tableBody) return;
-        tableBody.innerHTML = allStaffCache.length === 0 ? '<tr><td colspan="2" style="text-align:center;">Chưa có nhân viên nào.</td></tr>' 
-            : allStaffCache.map(s => `
-            <tr data-id="${s.id}" data-name="${s.name}">
-                <td>${s.name}</td>
-                <td><button class="delete-staff-btn btn-danger" type="button">Xóa</button></td>
+        tableBody.innerHTML = allStaffCache.map(staff => `
+            <tr>
+                <td>${staff.name}</td>
+                <td>${staff.commissionRate || 0}%</td>
+                <td class="action-buttons">
+                    <button onclick="editStaff('${staff.id}')" style="background-color: var(--warning-color);">Sửa</button>
+                    <button onclick="deleteStaff('${staff.id}', '${staff.name}')" style="background-color: var(--danger-color);">Xóa</button>
+                </td>
             </tr>`).join('');
     }
-
-    async function handleAddStaff() {
-        const { value: staffName } = await showPrompt('Thêm Nhân Viên Mới', 'Nhập tên nhân viên:');
-        if (staffName && staffName.trim()) {
-            showLoading('Đang thêm nhân viên...');
-            try {
-                // DIRECT WRITE TEST
-                await db.collection('staff').add({ name: staffName.trim() });
-                await logActivity("ADD_STAFF", { staffName: staffName.trim() });
-                // Reload data to confirm it was saved
-                await loadInitialData();
-                showAlert('success', 'Thành công!', 'Nhân viên đã được thêm.');
-            } catch (e) {
-                console.error("Error adding staff:", e);
-                showAlert('error', 'Lỗi khi lưu!', e.message);
-            } finally { hideLoading(); }
+    window.editStaff = (id) => {
+        const staff = allStaffCache.find(s => s.id === id);
+        if (staff) {
+            document.getElementById('staff-id').value = staff.id;
+            document.getElementById('staff-name').value = staff.name;
+            document.getElementById('staff-commission').value = staff.commissionRate || 0;
         }
-    }
-
-    async function handleDeleteStaff(staffId, staffName) {
-        const result = await showConfirm('Xóa nhân viên?', `Xóa "${staffName}" khỏi danh sách?`);
-        if (result.isConfirmed) {
-            showLoading('Đang xóa...');
-            try {
-                await db.collection('staff').doc(staffId).delete();
-                await logActivity("DELETE_STAFF", { staffName: staffName });
-                await loadInitialData();
-                showAlert('success', 'Đã xóa!', 'Nhân viên đã được xóa.');
-            } catch (e) {
-                console.error("Error deleting staff:", e);
-                showAlert('error', 'Lỗi khi xóa!', e.message);
-            } finally { hideLoading(); }
+    };
+    window.deleteStaff = async (id, name) => {
+        if (confirm(`Bạn có chắc muốn xóa nhân viên "${name}" không?`)) {
+            showLoader();
+            try { await db.collection('staff').doc(id).delete(); showAlert("Xóa nhân viên thành công!", () => loadInitialData().then(() => renderStaffTable())); } 
+            catch (error) { hideLoader(); showAlert("Lỗi: " + error.message); }
         }
-    }
+    };
 
-    async function handleEditShopInfo() { 
-         const bankOptions = bankListCache.reduce((acc, bank) => {
-            acc[bank.bin] = `${bank.shortName} - ${bank.name}`; return acc;
-        }, {});
-        const { value: formValues } = await Swal.fire({
-            title: 'Cập Nhật Thông Tin Shop',
-            html: `<input id="swal-beneficiary-name" class="swal2-input" placeholder="Tên người thụ hưởng" value="${shopInfoCache.beneficiaryName || ''}">
-                   <input id="swal-bank-account" class="swal2-input" placeholder="Số tài khoản" value="${shopInfoCache.bankAccountNo || ''}">
-                   <select id="swal-bank-bin" class="swal2-input">${Object.entries(bankOptions).map(([bin, name]) => `<option value="${bin}" ${bin === shopInfoCache.bankBin ? 'selected' : ''}>${name}</option>`).join('')}</select>`,
-            focusConfirm: false,
-            preConfirm: () => ({
-                beneficiaryName: document.getElementById('swal-beneficiary-name').value,
-                bankAccountNo: document.getElementById('swal-bank-account').value,
-                bankBin: document.getElementById('swal-bank-bin').value
-            })
-        });
+    // ** Inventory Management & Edit Product **
+    document.getElementById('inventory-search-input').addEventListener('input', () => renderInventoryTable());
+    document.getElementById('inventory-category-filter').addEventListener('change', () => renderInventoryTable());
 
-        if (formValues) {
-            showLoading('Đang lưu thông tin...');
-            try {
-                await db.collection('settings').doc('shopInfo').set(formValues, { merge: true });
-                await loadInitialData(); // Reload to confirm
-                showAlert('success', 'Thành công!', 'Thông tin shop đã được cập nhật.');
-            } catch (error) {
-                console.error("Error saving shop info:", error);
-                showAlert('error', 'Lỗi khi lưu!', error.message);
-            } finally { hideLoading(); }
+    function renderInventoryTable() {
+        const searchTerm = document.getElementById('inventory-search-input').value.toLowerCase();
+        const categoryFilter = document.getElementById('inventory-category-filter').value;
+
+        let filtered = allProductsCache;
+
+        if (categoryFilter) {
+            filtered = filtered.filter(p => p.category === categoryFilter);
         }
-    }
-
-    // --- 6. PAGE: INVENTORY ---
-    function renderInventoryPage() { 
-        const page = document.getElementById('page-inventory');
-        page.innerHTML = `
-            <div class="page-header"><h1>Quản Lý Kho Hàng</h1><button id="open-import-modal-btn" class="btn-success">Nhập Hàng Mới</button></div>
-            <div class="card">
-                <input type="text" id="inventory-search-input" placeholder="Tìm kiếm sản phẩm theo tên hoặc mã...">
-                <div style="overflow-x: auto;"><table id="inventory-table">
-                    <thead><tr><th>Tên sản phẩm</th><th>Mã hàng</th><th>Giá nhập</th><th>Giá bán</th><th>Danh mục</th><th>Tồn kho</th><th>Hành động</th></tr></thead>
-                    <tbody id="inventory-list-table"></tbody>
-                </table></div>
-            </div>`;
-        renderInventoryTable();
-    }
-    function renderInventoryTable(products = allProductsCache) {
-        const tableBody = document.getElementById('inventory-list-table');
-        if (!tableBody) return;
-        tableBody.innerHTML = products.length === 0 ? '<tr><td colspan="7" style="text-align:center;">Chưa có sản phẩm nào.</td></tr>' 
-            : products.map(p => `
-            <tr data-id="${p.id}" data-name="${p.name}">
-                <td>${p.name}</td><td>${p.code || ''}</td><td>${(p.importPrice || 0).toLocaleString('vi-VN')}</td>
-                <td>${(p.sellPrice || 0).toLocaleString('vi-VN')}</td><td>${p.category}</td><td><strong>${p.inventory}</strong></td>
-                <td><button class="delete-product-btn btn-danger" type="button">Xóa</button></td>
-            </tr>`).join('');
-    }
-
-    // --- 7. PAGE: SALES ---
-    function getStaffOptionsHTML() {
-        if (!allStaffCache || allStaffCache.length === 0) return `<option value="" disabled selected>-- Chưa có nhân viên (Thêm tại tab Cửa hàng) --</option>`;
-        return `<option value="" disabled selected>-- Chọn người bán --</option>` + allStaffCache.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
-    }
-    function renderSalesPage() {
-        const page = document.getElementById('page-sales');
-        page.innerHTML = `
-            <div class="page-header"><h1>Tạo Đơn Hàng Mới</h1></div>
-            <div class="card">
-                <form id="sale-form">
-                    <h3>1. Thông Tin Khách Hàng</h3>
-                    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 15px;">
-                        <input type="tel" id="customer-phone" placeholder="SĐT Khách (10 số)" required pattern="[0-9]{10}">
-                        <div class="customer-info-wrapper">
-                           <input type="text" id="customer-name" placeholder="Tên khách hàng" required>
-                           <span id="customer-status-icon" class="customer-status-icon"></span>
-                        </div>
-                    </div>
-                    <hr>
-                    <h3>2. Thông Tin Sản Phẩm</h3>
-                    <div id="sale-item-rows"></div>
-                    <button type="button" id="add-sale-item-btn" class="btn-secondary" style="width: auto;">+ Thêm sản phẩm</button>
-                    <h3 style="margin-top: 25px;">3. Thanh Toán</h3>
-                    <select id="payment-method" required><option value="cash" selected>Tiền mặt</option><option value="transfer">Chuyển khoản</option></select>
-                    <hr>
-                    <h3>4. Người Bán</h3>
-                    <select id="seller-select" required>${getStaffOptionsHTML()}</select>
-                    <hr>
-                    <div style="text-align: right; font-size: 1.5em; font-weight: bold;">Tổng cộng: <span id="sale-total-amount">0</span> đ</div>
-                    <button type="submit" class="btn-primary" style="width: 100%; margin-top: 20px; font-size: 1.2em;">HOÀN TẤT ĐƠN HÀNG</button>
-                </form>
-            </div>`;
-    }
-
-    // --- 8. DYNAMIC FORMS & LOGIC ---
-    function getCategoryOptionsHTML(selectedValue = "") { 
-        let options = allCategoriesCache.map(c => `<option value="${c}" ${c === selectedValue ? 'selected' : ''}>${c}</option>`).join('');
-        return `<option value="" disabled ${!selectedValue ? 'selected' : ''}>-- Chọn Danh mục --</option>` + options + `<option value="new_category" style="font-weight:bold; color: var(--success-color);">+ Thêm danh mục mới...</option>`;
-    }
-    function getProductOptionsHTML(category, isImportForm = false) { 
-        if (!category) return `<option value="" disabled selected>-- Chọn danh mục trước --</option>`;
-        const products = allProductsCache.filter(p => p.category === category && (isImportForm || p.inventory > 0));
-        let options = products.map(p => `<option value="${p.id}">${p.name} (Tồn: ${p.inventory})</option>`).join('');
-        return `<option value="" disabled selected>${isImportForm ? '-- Chọn hoặc thêm mới --' : '-- Chọn sản phẩm --'}</option>` + options + (isImportForm ? `<option value="new_product" style="font-weight:bold; color: var(--primary-color);">+ Thêm sản phẩm mới...</option>` : '');
-    }
-
-    // --- 9. EVENT LISTENERS (FIXED ATTACHMENT) ---
-    // We use delegation for dynamic elements to avoid re-attaching multiple times
-    document.addEventListener('click', async (e) => {
-        // Global clicks
-        if (e.target.closest('.menu-toggle')) document.getElementById('sidebar').classList.toggle('open');
-        if (e.target.closest('.nav-link')) { e.preventDefault(); showPage(e.target.closest('.nav-link').getAttribute('href').substring(1)); }
-        if (e.target.matches('#import-goods-modal .close-btn')) document.getElementById('import-goods-modal').style.display = 'none';
+        if (searchTerm) {
+            filtered = filtered.filter(p => p.name.toLowerCase().includes(searchTerm) || (p.code && p.code.toLowerCase().includes(searchTerm)));
+        }
         
-        // Dashboard actions
-        if (e.target.id === 'add-staff-btn') handleAddStaff();
-        if (e.target.id === 'edit-shop-info-btn') handleEditShopInfo();
-        if (e.target.classList.contains('delete-staff-btn')) {
-            const row = e.target.closest('tr'); handleDeleteStaff(row.dataset.id, row.dataset.name);
+        const tableBody = document.getElementById('inventory-list-table');
+        tableBody.innerHTML = filtered.map(p => {
+            let soldCount = 0;
+            allTransactionsCache.forEach(t => {
+                if (t.type === 'export' && t.items && Array.isArray(t.items)) { t.items.forEach(item => { if(item.productId === p.id) soldCount += item.quantity; }); }
+            });
+
+            return `
+            <tr>
+                <td>${p.name}</td>
+                <td>${p.code || ''}</td>
+                <td>${formatCurrency(p.importPrice)}</td>
+                <td>${formatCurrency(p.sellPrice)}</td>
+                <td>${p.category}</td>
+                <td><strong>${p.inventory}</strong></td>
+                <td>${soldCount}</td>
+                <td class="action-buttons">
+                     <button onclick="openEditProductModal('${p.id}')" style="background-color: var(--warning-color);">Sửa</button>
+                     <button onclick="deleteProduct('${p.id}', '${p.name}')" style="background-color: var(--danger-color);">Xóa</button>
+                </td>
+            </tr>`}).join('');
+    }
+    window.openEditProductModal = (productId) => {
+        const product = allProductsCache.find(p => p.id === productId);
+        if (product) {
+            document.getElementById('edit-product-id').value = product.id;
+            document.getElementById('edit-product-name').value = product.name;
+            document.getElementById('edit-product-code').value = product.code || '';
+            document.getElementById('edit-import-price').value = product.importPrice;
+            document.getElementById('edit-sell-price').value = product.sellPrice;
+            populateCategoryDropdown('edit-category', false, product.category);
+            openModal('edit-product-modal');
+        }
+    };
+    document.getElementById('edit-product-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('edit-product-id').value;
+        const name = document.getElementById('edit-product-name').value.trim();
+        const importPrice = parseFloat(document.getElementById('edit-import-price').value);
+        const sellPrice = parseFloat(document.getElementById('edit-sell-price').value);
+        const category = document.getElementById('edit-category').value;
+
+        if (!name || !category || isNaN(importPrice) || isNaN(sellPrice)) {
+            showFormError("Vui lòng điền đầy đủ và chính xác tất cả các trường.");
+            return;
         }
 
-        // Inventory actions
-        if (e.target.id === 'open-import-modal-btn') {
-            document.getElementById('import-item-rows').innerHTML = '';
-            addImportItemRow();
-            document.getElementById('import-goods-modal').style.display = 'block';
+        const data = { name, code: document.getElementById('edit-product-code').value, importPrice, sellPrice, category };
+        showLoader();
+        try { 
+            await db.collection('products').doc(id).update(data); 
+            showAlert("Cập nhật sản phẩm thành công!", () => loadInitialData().then(() => { 
+                closeModal('edit-product-modal'); 
+                openModal('inventory-modal'); 
+            })); 
+        } 
+        catch(error) { hideLoader(); showAlert("Lỗi: " + error.message); }
+    });
+    window.deleteProduct = async (id, name) => {
+        if (confirm(`Bạn có chắc muốn xóa vĩnh viễn sản phẩm "${name}" không?`)) {
+            showLoader();
+            try { await db.collection('products').doc(id).delete(); showAlert("Xóa sản phẩm thành công!", () => loadInitialData().then(() => renderInventoryTable())); } 
+            catch (error) { hideLoader(); showAlert("Lỗi: " + error.message); }
         }
-        if (e.target.id === 'add-import-item-btn') addImportItemRow();
-        if (e.target.classList.contains('delete-product-btn')) {
-             const row = e.target.closest('tr');
-             const result = await showConfirm('Xóa sản phẩm?', `Xóa vĩnh viễn "${row.dataset.name}"?`);
-             if(result.isConfirmed) {
-                 showLoading('Đang xóa...');
-                 try { await db.collection('products').doc(row.dataset.id).delete(); await loadInitialData(); showAlert('success', 'Đã xóa', ''); }
-                 catch(err) { showAlert('error', 'Lỗi', err.message); } finally { hideLoading(); }
-             }
+    };
+    
+    // ** Import Goods (New Flow) **
+    function resetImportForm() {
+        document.getElementById('import-form').reset();
+        populateCategoryDropdown('import-category-select', false);
+        document.getElementById('import-product-select').innerHTML = '<option value="">-- Chọn danh mục trước --</option>';
+        document.getElementById('new-product-fields').style.display = 'none';
+        currentImportItems = [];
+        renderImportList();
+    }
+    document.getElementById('add-new-category-import-btn').addEventListener('click', async () => {
+        const categoryName = prompt("Nhập tên danh mục mới:");
+        if (categoryName && categoryName.trim()) {
+            showLoader();
+            try {
+                const newCat = { name: categoryName.trim() };
+                await db.collection('categories').add(newCat);
+                await loadInitialData();
+                populateCategoryDropdown('import-category-select', false, newCat.name);
+                document.getElementById('import-category-select').dispatchEvent(new Event('change'));
+            } catch(error) { showAlert("Lỗi: " + error.message); } 
+            finally { hideLoader(); }
+        }
+    });
+    document.getElementById('import-category-select').addEventListener('change', (e) => {
+        const category = e.target.value;
+        const productsInCategory = allProductsCache.filter(p => p.category === category);
+        const select = document.getElementById('import-product-select');
+        select.innerHTML = `<option value="" disabled selected>-- Chọn sản phẩm hoặc thêm mới --</option>
+            ${productsInCategory.map(p => `<option value="${p.id}">${p.name} (${p.code || 'N/A'})</option>`).join('')}
+            <option value="new" style="font-weight: bold; color: var(--primary-color);">-- Thêm sản phẩm mới --</option>`;
+    });
+    document.getElementById('import-product-select').addEventListener('change', (e) => {
+        const isNew = e.target.value === 'new';
+        document.getElementById('new-product-fields').style.display = isNew ? 'block' : 'none';
+    });
+    document.getElementById('add-to-import-list-btn').addEventListener('click', () => {
+        const category = document.getElementById('import-category-select').value;
+        const productId = document.getElementById('import-product-select').value;
+        const quantity = parseInt(document.getElementById('import-quantity-input').value);
+
+        if (!category || !productId) { showFormError("Vui lòng chọn danh mục và sản phẩm."); return; }
+        if (isNaN(quantity) || quantity <= 0) { showFormError("Vui lòng nhập số lượng hợp lệ."); return; }
+
+        if (productId === 'new') {
+            const newItem = {
+                isNew: true, id: `new_${Date.now()}`,
+                name: document.getElementById('new-product-name').value.trim(), code: document.getElementById('new-product-code').value.trim(),
+                importPrice: parseFloat(document.getElementById('new-import-price').value), sellPrice: parseFloat(document.getElementById('new-sell-price').value),
+                category: category, quantity: quantity };
+            if (!newItem.name || isNaN(newItem.importPrice) || isNaN(newItem.sellPrice)) { showFormError("Vui lòng điền đủ thông tin cho sản phẩm mới."); return; }
+            currentImportItems.push(newItem);
+        } else {
+            const product = allProductsCache.find(p => p.id === productId);
+            if (product) {
+                const existingItem = currentImportItems.find(item => item.id === productId);
+                if(existingItem) { existingItem.quantity += quantity; } 
+                else { currentImportItems.push({ ...product, quantity, isNew: false }); }
+            }
+        }
+        renderImportList();
+        document.getElementById('import-quantity-input').value = '';
+        document.getElementById('import-product-select').selectedIndex = 0;
+        document.getElementById('new-product-fields').style.display = 'none';
+        document.getElementById('new-product-fields').querySelectorAll('input').forEach(el => el.value = '');
+    });
+    function renderImportList() {
+        const tableBody = document.getElementById('import-list-table');
+        const confirmBtn = document.getElementById('confirm-import-btn');
+        tableBody.innerHTML = currentImportItems.map((item, index) => `
+            <tr>
+                <td>${item.name} ${item.isNew ? '(Mới)' : ''}</td>
+                <td>${item.quantity}</td>
+                <td><button type="button" onclick="removeFromImportList(${index})" style="background-color:var(--danger-color); width:auto; padding:5px 10px;">Xóa</button></td>
+            </tr>`).join('');
+        confirmBtn.disabled = currentImportItems.length === 0;
+    }
+    window.removeFromImportList = (index) => { currentImportItems.splice(index, 1); renderImportList(); };
+    document.getElementById('import-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        let totalCost = currentImportItems.reduce((sum, item) => sum + item.quantity * (item.importPrice || 0), 0);
+        const confirmationMessage = `Bạn có chắc muốn nhập ${currentImportItems.length} loại sản phẩm với tổng vốn là ${formatCurrency(totalCost)} không?`;
+        
+        if (!confirm(confirmationMessage)) {
+            return;
         }
 
-        // Sales actions
-        if (e.target.id === 'add-sale-item-btn') addSaleItemRow();
-        if (e.target.classList.contains('remove-row-btn')) {
-            e.target.closest('.batch-item-row').remove();
-            updateSaleTotal();
+        showLoader("Đang nhập hàng...");
+        try {
+            const batch = db.batch(); const transactionItems = [];
+            for (const item of currentImportItems) {
+                if (item.isNew) {
+                    const newProductRef = db.collection('products').doc();
+                    batch.set(newProductRef, { name: item.name, code: item.code, importPrice: item.importPrice, sellPrice: item.sellPrice, category: item.category, inventory: item.quantity });
+                    transactionItems.push({productId: newProductRef.id, name: item.name, quantity: item.quantity, importPrice: item.importPrice});
+                } else {
+                    const productRef = db.collection('products').doc(item.id);
+                    batch.update(productRef, { inventory: firebase.firestore.FieldValue.increment(item.quantity) });
+                    transactionItems.push({productId: item.id, name: item.name, quantity: item.quantity, importPrice: item.importPrice});
+                }
+            }
+            await batch.commit();
+            await createTransaction('import', transactionItems, 0, totalCost, 0, auth.currentUser.email);
+            showAlert('Nhập hàng thành công!', () => loadInitialData().then(() => { closeModal('import-goods-modal'); openModal('inventory-modal'); }));
+        } catch(error) { hideLoader(); showAlert("Lỗi khi nhập hàng: " + error.message); }
+    });
+
+    // ** Sales (with Category Filter & QR Confirmation) **
+    function resetSalesForm() {
+        document.getElementById('sales-form').reset();
+        document.getElementById('customer-name').readOnly = false;
+        populateStaffDropdown('sales-staff');
+        populateCategoryDropdown('sales-category-select', true);
+        document.getElementById('sales-product-select').innerHTML = '<option value="">-- Chọn danh mục trước --</option>';
+        document.getElementById('sales-product-info').style.display = 'none';
+        currentOrderItems = [];
+        renderSalesCart();
+    }
+
+    document.getElementById('customer-phone').addEventListener('blur', (e) => {
+        const phone = e.target.value.trim();
+        const nameInput = document.getElementById('customer-name');
+        if (phone) {
+            const existingCustomer = allCustomersCache.find(c => c.phone === phone);
+            if (existingCustomer) {
+                nameInput.value = existingCustomer.name;
+                nameInput.readOnly = true;
+            } else {
+                nameInput.value = '';
+                nameInput.readOnly = false;
+            }
         }
     });
 
-    // --- Dynamic Row Handlers ---
-    function attachRowListeners(row, isImport) {
-        const catSelect = row.querySelector('.category-select');
-        const prodSelect = row.querySelector('.product-select');
+    document.getElementById('sales-category-select').addEventListener('change', (e) => { populateSalesProductDropdown(e.target.value); });
+    function populateSalesProductDropdown(categoryName) {
+        const select = document.getElementById('sales-product-select');
+        let productsToList = allProductsCache.filter(p => p.inventory > 0);
+        if(categoryName) { productsToList = productsToList.filter(p => p.category === categoryName); }
+        select.innerHTML = '<option value="">-- Chọn sản phẩm --</option>' + 
+                           productsToList.map(p => `<option value="${p.id}">${p.name} (Tồn: ${p.inventory})</option>`).join('');
+    }
+    document.getElementById('sales-product-select').addEventListener('change', () => {
+        const productId = document.getElementById('sales-product-select').value;
+        const infoDiv = document.getElementById('sales-product-info');
+        if (!productId) { infoDiv.style.display = 'none'; return; }
+        const product = allProductsCache.find(p => p.id === productId);
+        document.getElementById('sales-inventory-stock').textContent = product.inventory;
+        document.getElementById('sales-price').textContent = formatCurrency(product.sellPrice);
+        infoDiv.style.display = 'block';
+    });
+    document.getElementById('add-to-cart-btn').addEventListener('click', () => {
+        const productId = document.getElementById('sales-product-select').value; if (!productId) return;
+        const product = allProductsCache.find(p => p.id === productId);
+        const existingItem = currentOrderItems.find(item => item.id === productId);
+        const quantityInCart = existingItem ? existingItem.quantity : 0;
+        if (quantityInCart >= product.inventory) { showFormError(`Sản phẩm ${product.name} chỉ còn ${product.inventory} trong kho.`); return; }
+        if (existingItem) { existingItem.quantity++; existingItem.subtotal = existingItem.quantity * existingItem.sellPrice; } 
+        else { currentOrderItems.push({ ...product, quantity: 1, subtotal: product.sellPrice }); }
+        renderSalesCart();
+    });
+    function renderSalesCart() {
+        const tableBody = document.getElementById('sales-cart-items'); let total = 0;
+        tableBody.innerHTML = currentOrderItems.map((item, index) => {
+            total += item.subtotal;
+            return `
+            <tr>
+                <td>${item.name}</td>
+                <td><div class="cart-item-actions"><button type="button" onclick="updateCartQuantity(${index}, -1)">-</button><span>${item.quantity}</span><button type="button" onclick="updateCartQuantity(${index}, 1)">+</button></div></td>
+                <td>${formatCurrency(item.sellPrice)}</td><td>${formatCurrency(item.subtotal)}</td>
+                <td><button type="button" onclick="removeFromCart(${index})" style="background-color:var(--danger-color); padding:5px 10px; width:auto;">Xóa</button></td>
+            </tr>`;
+        }).join('');
+        document.getElementById('sales-total').textContent = formatCurrency(total);
+    }
+    window.updateCartQuantity = (index, change) => {
+        const item = currentOrderItems[index]; const product = allProductsCache.find(p => p.id === item.id); const newQuantity = item.quantity + change;
+        if (newQuantity <= 0) { removeFromCart(index); return; }
+        if (newQuantity > product.inventory) { showFormError(`Sản phẩm ${product.name} chỉ còn ${product.inventory} trong kho.`); return; }
+        item.quantity = newQuantity; item.subtotal = item.quantity * item.sellPrice; renderSalesCart();
+    };
+    window.removeFromCart = (index) => { currentOrderItems.splice(index, 1); renderSalesCart(); };
+
+    document.getElementById('sales-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (currentOrderItems.length === 0) { showFormError("Đơn hàng đang trống. Vui lòng thêm sản phẩm."); return; }
+        const staffId = document.getElementById('sales-staff').value; if (!staffId) { showFormError("Vui lòng chọn nhân viên bán hàng."); return; }
         
-        catSelect.addEventListener('change', async (e) => {
-            if (e.target.value === 'new_category') {
-                const { value: newCat } = await showPrompt('Danh mục mới', 'Tên danh mục:');
-                if (newCat && newCat.trim()) {
-                    if (!allCategoriesCache.includes(newCat.trim())) allCategoriesCache.push(newCat.trim());
-                     // Refresh all category selects currently on screen
-                     document.querySelectorAll('.category-select').forEach(s => {
-                         const oldVal = s.value === 'new_category' ? '' : s.value;
-                         s.innerHTML = getCategoryOptionsHTML(oldVal);
-                     });
-                     e.target.value = newCat.trim();
-                } else { e.target.value = ''; }
-            }
-            const prodSel = row.querySelector('.product-select');
-            prodSel.innerHTML = getProductOptionsHTML(e.target.value, isImport);
-            prodSel.disabled = !e.target.value;
-        });
+        tempOrderData = {
+            customerPhone: document.getElementById('customer-phone').value.trim(), customerName: document.getElementById('customer-name').value.trim(),
+            staffId: staffId, items: [...currentOrderItems]
+        };
+        
+        const paymentMethod = document.getElementById('payment-method').value;
+        if (paymentMethod === 'Chuyển khoản') {
+            if (!paymentInfoCache) { showFormError("Chưa cấu hình thông tin thanh toán."); return; }
+            let totalRevenue = tempOrderData.items.reduce((sum, item) => sum + item.subtotal, 0);
+            const transactionId = `DH${Date.now()}`; tempOrderData.transactionId = transactionId;
+            displayVietQR(totalRevenue, transactionId);
+        } else { showLoader("Đang xử lý đơn hàng..."); await finalizeOrder(); }
+    });
 
-        prodSelect.addEventListener('change', async (e) => {
-            if (isImport && e.target.value === 'new_product') {
-                 const cat = row.querySelector('.category-select').value;
-                 const { value: newProd } = await showPrompt('Sản phẩm mới', `Tên sản phẩm thuộc "${cat}":`);
-                 if (newProd && newProd.trim()) {
-                     // Create a temporary "new" option
-                     const opt = document.createElement('option');
-                     opt.value = "NEW::" + newProd.trim();
-                     opt.text = newProd.trim() + " (Mới)";
-                     opt.selected = true;
-                     e.target.insertBefore(opt, e.target.lastElementChild);
-                     row.querySelector('.import-price').focus();
-                 } else { e.target.value = ""; }
-            } else if (!isImport) {
-                 updateSaleRow(row);
-            }
-        });
+    document.getElementById('confirm-payment-btn').addEventListener('click', async () => { showLoader("Đang hoàn tất đơn hàng..."); await finalizeOrder(); });
 
-        if (!isImport) {
-            row.querySelector('.sale-quantity').addEventListener('input', () => updateSaleRow(row));
-        }
-    }
+    async function finalizeOrder() {
+        if (!tempOrderData) return;
+        try {
+            const { customerPhone, customerName } = tempOrderData;
+            const existingCustomer = allCustomersCache.find(c => c.phone === customerPhone);
+            if (!existingCustomer && customerPhone && customerName) { await db.collection('customers').add({ name: customerName, phone: customerPhone }); }
 
-    function addImportItemRow() {
-        const div = document.createElement('div'); div.className = 'batch-item-row';
-        div.innerHTML = `<select class="category-select" required>${getCategoryOptionsHTML()}</select>
-            <select class="product-select" required disabled>${getProductOptionsHTML(null, true)}</select>
-            <input type="number" class="import-quantity" placeholder="SL" min="1" required>
-            <input type="number" class="import-price" placeholder="Giá nhập" min="0" required>
-            <input type="number" class="import-sell-price" placeholder="Giá bán" min="0" required>
-            <button type="button" class="remove-row-btn">&times;</button>`;
-        document.getElementById('import-item-rows').appendChild(div);
-        attachRowListeners(div, true);
-    }
+            const staff = allStaffCache.find(s => s.id === tempOrderData.staffId);
+            let totalRevenue = 0, totalCost = 0;
+            tempOrderData.items.forEach(item => { totalRevenue += item.subtotal; totalCost += item.quantity * item.importPrice; });
+            let totalProfit = totalRevenue - totalCost;
 
-    function addSaleItemRow() {
-        const div = document.createElement('div'); div.className = 'batch-item-row';
-        div.innerHTML = `<select class="category-select" required>${getCategoryOptionsHTML()}</select>
-            <select class="product-select" required disabled>${getProductOptionsHTML(null, false)}</select>
-            <input type="number" class="sale-quantity" placeholder="SL" min="1" value="1" required>
-            <span class="sale-price">0</span> <span class="sale-subtotal" style="font-weight:bold;">0</span>
-            <button type="button" class="remove-row-btn">&times;</button>`;
-        document.getElementById('sale-item-rows').appendChild(div);
-        attachRowListeners(div, false);
-    }
+            const batch = db.batch();
+            tempOrderData.items.forEach(item => { const productRef = db.collection('products').doc(item.id); batch.update(productRef, { inventory: firebase.firestore.FieldValue.increment(-item.quantity) }); });
+            await batch.commit();
 
-    function updateSaleRow(row) {
-        const prodId = row.querySelector('.product-select').value;
-        const qtyInput = row.querySelector('.sale-quantity');
-        const product = allProductsCache.find(p => p.id === prodId);
-        if (product) {
-            let qty = parseInt(qtyInput.value) || 0;
-            if (qty > product.inventory) { qty = product.inventory; qtyInput.value = qty; showAlert('warning', 'Hết hàng', `Chỉ còn ${product.inventory} sản phẩm.`); }
-            row.querySelector('.sale-price').textContent = (product.sellPrice || 0).toLocaleString('vi-VN');
-            row.querySelector('.sale-subtotal').textContent = ((product.sellPrice || 0) * qty).toLocaleString('vi-VN');
-        }
-        updateSaleTotal();
-    }
-    function updateSaleTotal() {
-        let total = 0;
-        document.querySelectorAll('#sale-item-rows .batch-item-row').forEach(row => {
-             total += parseInt(row.querySelector('.sale-subtotal').textContent.replace(/\D/g,'')) || 0;
-        });
-        document.getElementById('sale-total-amount').textContent = total.toLocaleString('vi-VN');
-    }
-
-    // --- FORM SUBMISSIONS ---
-    function attachAllEventListeners() {
-        // Only attach once, so we check if they already exist
-        if (!window.formsAttached) {
-            window.formsAttached = true;
-
-            document.getElementById('import-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                showLoading('Đang nhập kho...');
-                try {
-                    const batch = db.batch();
-                    let itemCount = 0, totalCost = 0;
-                    // Use Array.from to correctly iterate and await inside loop if needed (though here we just build batch)
-                    const rows = Array.from(e.target.querySelectorAll('.batch-item-row'));
-                    
-                    for (const row of rows) {
-                        const cat = row.querySelector('.category-select').value;
-                        let prodVal = row.querySelector('.product-select').value;
-                        const qty = parseInt(row.querySelector('.import-quantity').value);
-                        const iPrice = parseInt(row.querySelector('.import-price').value);
-                        const sPrice = parseInt(row.querySelector('.import-sell-price').value);
-
-                        if (!cat || !prodVal || isNaN(qty) || qty <= 0) throw new Error("Vui lòng kiểm tra lại thông tin nhập.");
-
-                        if (prodVal.startsWith("NEW::")) {
-                            // New product
-                            const name = prodVal.substring(5);
-                            const newRef = db.collection('products').doc();
-                            batch.set(newRef, { name, category: cat, importPrice: iPrice, sellPrice: sPrice, inventory: qty, code: 'SP' + Date.now().toString().slice(-6) });
-                        } else {
-                            // Existing product
-                            batch.update(db.collection('products').doc(prodVal), {
-                                inventory: firebase.firestore.FieldValue.increment(qty),
-                                importPrice: iPrice, sellPrice: sPrice, category: cat // Update cat just in case
-                            });
-                        }
-                        itemCount += qty; totalCost += (iPrice * qty);
-                    }
-
-                    batch.set(db.collection('transactions').doc(), {
-                        type: 'import', totalAmount: totalCost, itemCount, timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-
-                    await batch.commit();
-                    // CRITICAL: Force reload from server to confirm save
-                    await loadInitialData();
-                    document.getElementById('import-goods-modal').style.display = 'none';
-                    showAlert('success', 'Nhập kho thành công!');
-                } catch (err) {
-                    console.error("Import failed:", err);
-                    showAlert('error', 'Lỗi nhập kho', err.message);
-                } finally { hideLoading(); }
+            const transactionItems = tempOrderData.items.map(item => ({ productId: item.id, name: item.name, quantity: item.quantity, sellPrice: item.sellPrice, importPrice: item.importPrice }));
+            const transactionId = tempOrderData.transactionId || `DH${Date.now()}`;
+            await createTransaction('export', transactionItems, totalRevenue, totalCost, totalProfit, staff.name, customerName, transactionId, customerPhone);
+            
+            tempOrderData = null;
+            showAlert('Tạo đơn hàng thành công!', () => {
+                closeAllModals();
+                loadInitialData();
             });
+        } catch(error) { showAlert("Lỗi khi hoàn tất đơn hàng: " + error.message); } 
+        finally { hideLoader(); }
+    }
 
-            document.getElementById('sale-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                // ... (Sales logic similar to before, but with better error handling)
-                const rows = document.querySelectorAll('#sale-item-rows .batch-item-row');
-                if(rows.length === 0) return showAlert('warning', 'Chưa chọn sản phẩm nào!');
-                
-                showLoading('Đang tạo đơn...');
-                try {
-                    const batch = db.batch();
-                    let total = 0, profit = 0, items = [];
-                    for(const row of rows) {
-                         const prodId = row.querySelector('.product-select').value;
-                         const qty = parseInt(row.querySelector('.sale-quantity').value);
-                         const prod = allProductsCache.find(p => p.id === prodId);
-                         if(!prod || qty > prod.inventory) throw new Error(`Sản phẩm ${prod?.name || ''} không đủ tồn kho.`);
-                         
-                         batch.update(db.collection('products').doc(prodId), { inventory: firebase.firestore.FieldValue.increment(-qty) });
-                         total += (prod.sellPrice * qty);
-                         profit += ((prod.sellPrice - prod.importPrice) * qty);
-                         items.push({productId: prodId, name: prod.name, qty, price: prod.sellPrice});
-                    }
+    function displayVietQR(amount, orderId) {
+        const { bankBin, accountNumber, beneficiaryName } = paymentInfoCache;
+        const addInfo = `TT_${orderId}`;
+        const qrUrl = `https://img.vietqr.io/image/${bankBin}-${accountNumber}-compact2.jpg?amount=${amount}&addInfo=${encodeURIComponent(addInfo)}&accountName=${encodeURIComponent(beneficiaryName)}`;
+        document.getElementById('qr-code-image').src = qrUrl;
+        document.getElementById('qr-content').textContent = addInfo;
+        closeModal('sales-modal');
+        openModal('qr-confirm-modal');
+    }
 
-                    batch.set(db.collection('transactions').doc(), {
-                        type: 'export',
-                        customer: { name: document.getElementById('customer-name').value, phone: document.getElementById('customer-phone').value },
-                        seller: document.getElementById('seller-select').value,
-                        payment: document.getElementById('payment-method').value,
-                        items, totalAmount: total, totalProfit: profit,
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                    });
+    // ** Transaction History (Tabbed) **
+    function renderHistoryTables(searchTerm = '') {
+        const term = searchTerm.toLowerCase();
+        const exportHistory = [], importHistory = [];
 
-                    await batch.commit();
-                    await loadInitialData();
-                    document.getElementById('sale-form').reset(); document.getElementById('sale-item-rows').innerHTML = ''; updateSaleTotal();
-                    showAlert('success', 'Đơn hàng đã hoàn tất!');
-                } catch(err) {
-                    console.error("Sale failed:", err); showAlert('error', 'Lỗi tạo đơn', err.message);
-                } finally { hideLoading(); }
-            });
-             // Customer phone lookup
-            document.getElementById('customer-phone').addEventListener('blur', async (e) => {
-                if (e.target.value.length === 10) {
-                    try {
-                       const doc = await db.collection('customers').doc(e.target.value).get();
-                       if(doc.exists) document.getElementById('customer-name').value = doc.data().name;
-                    } catch(err) { console.warn("Customer lookup failed", err); }
+        allTransactionsCache.forEach(t => {
+            const matchesSearch = !term || (t.staffName && t.staffName.toLowerCase().includes(term)) || (t.customerName && t.customerName.toLowerCase().includes(term)) || (t.customerPhone && t.customerPhone.includes(term)) || (t.transactionId && t.transactionId.toLowerCase().includes(term)) || (t.items && Array.isArray(t.items) && t.items.some(item => item.name.toLowerCase().includes(term)));
+            if(matchesSearch){
+                if (t.type === 'export') exportHistory.push(t);
+                else if (t.type === 'import') importHistory.push(t);
+            }
+        });
+
+        const exportBody = document.getElementById('export-history-table');
+        exportBody.innerHTML = exportHistory.map(t => {
+            const date = t.timestamp ? t.timestamp.toDate().toLocaleString('vi-VN') : 'N/A';
+            const itemsDetails = (t.items && Array.isArray(t.items)) ? t.items.map(item => `<li>${item.name} (SL: ${item.quantity})</li>`).join('') : '';
+            return `
+            <tr>
+                <td>${date}</td><td>${t.transactionId || 'N/A'}</td>
+                <td><ul style="margin:0; padding-left:15px;">${itemsDetails}</ul></td>
+                <td>${t.staffName || 'N/A'}</td><td>${t.customerName || 'N/A'} (${t.customerPhone || 'N/A'})</td>
+                <td>${formatCurrency(t.totalRevenue)}</td>
+            </tr>`;
+        }).join('');
+        
+        const importBody = document.getElementById('import-history-table');
+        importBody.innerHTML = importHistory.map(t => {
+            const date = t.timestamp ? t.timestamp.toDate().toLocaleString('vi-VN') : 'N/A';
+            const itemsDetails = (t.items && Array.isArray(t.items)) ? t.items.map(item => `<li>${item.name} (SL: ${item.quantity})</li>`).join('') : '';
+            return `
+             <tr>
+                <td>${date}</td><td><ul style="margin:0; padding-left:15px;">${itemsDetails}</ul></td>
+                <td>${formatCurrency(t.totalCost)}</td>
+            </tr>`;
+        }).join('');
+    }
+    document.getElementById('history-search-input').addEventListener('input', e => renderHistoryTables(e.target.value));
+
+    // ** Staff Report & Commission **
+    function renderStaffReport() {
+        const now = new Date();
+        const dayOfWeek = now.getDay();
+        const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        
+        const report = {};
+        allStaffCache.forEach(s => { 
+            report[s.name] = { orders: 0, ordersWeek: 0, ordersMonth: 0, revenue: 0, profit: 0, commissionRate: s.commissionRate || 0 }; 
+        });
+        allTransactionsCache.forEach(t => {
+            if (t.type === 'export' && t.staffName && report[t.staffName]) {
+                const tDate = t.timestamp ? t.timestamp.toDate() : null;
+                report[t.staffName].orders++; 
+                report[t.staffName].revenue += t.totalRevenue || 0; 
+                report[t.staffName].profit += t.totalProfit || 0;
+                if(tDate) {
+                    if (tDate >= startOfWeek) report[t.staffName].ordersWeek++;
+                    if (tDate >= startOfMonth) report[t.staffName].ordersMonth++;
                 }
-            });
-        }
+            }
+        });
+        
+        const tableBody = document.getElementById('staff-report-table');
+        tableBody.innerHTML = Object.keys(report).sort().map(staffName => {
+            const data = report[staffName]; const commission = data.revenue * (data.commissionRate / 100);
+            return `
+            <tr>
+                <td>${staffName}</td>
+                <td>${data.orders}</td>
+                <td>${data.ordersWeek}</td>
+                <td>${data.ordersMonth}</td>
+                <td>${formatCurrency(data.revenue)}</td>
+                <td>${formatCurrency(data.profit)}</td>
+                <td>${data.commissionRate}%</td>
+                <td><strong>${formatCurrency(commission)}</strong></td>
+            </tr>`;
+        }).join('');
     }
+
+    // ** Revenue Report by Date Range **
+    document.getElementById('revenue-report-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const startDate = new Date(document.getElementById('start-date').value);
+        const endDate = new Date(document.getElementById('end-date').value);
+
+        if (endDate < startDate) { showFormError("Ngày kết thúc không thể trước ngày bắt đầu."); return; }
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(23, 59, 59, 999);
+
+        const filtered = allTransactionsCache.filter(t => { if(!t.timestamp) return false; const tDate = t.timestamp.toDate(); return t.type === 'export' && tDate >= startDate && tDate <= endDate; });
+        let totalRevenue = 0, totalProfit = 0, orderCount = filtered.length;
+        filtered.forEach(t => { totalRevenue += t.totalRevenue || 0; totalProfit += t.totalProfit || 0; });
+
+        document.getElementById('report-results').innerHTML = `
+            <h3>Kết quả từ ${startDate.toLocaleDateString('vi-VN')} đến ${endDate.toLocaleDateString('vi-VN')}</h3>
+            <div class="stats-grid">
+                <div class="stat-item stat-revenue"><p>Tổng Doanh thu</p><strong>${formatCurrency(totalRevenue)}</strong></div>
+                <div class="stat-item stat-profit"><p>Tổng Lợi nhuận</p><strong>${formatCurrency(totalProfit)}</strong></div>
+                <div class="stat-item stat-info"><p>Tổng số đơn hàng</p><strong>${orderCount}</strong></div>
+            </div>`;
+    });
+
+    // ** Reset Data **
+    document.getElementById('reset-data-btn').addEventListener('click', () => {
+        const confirmation = prompt('Đây là hành động cực kỳ nguy hiểm và không thể hoàn tác.\nĐể xác nhận, vui lòng nhập chính xác chuỗi sau: "XÓA DỮ LIỆU"');
+        if (confirmation === 'XÓA DỮ LIỆU') { if(confirm('CẢNH BÁO CUỐI CÙNG: Bạn có chắc chắn muốn xóa TOÀN BỘ dữ liệu không?')) { resetAllData(); } } 
+        else if (confirmation !== null) { showAlert('Chuỗi xác nhận không chính xác. Hành động đã bị hủy.'); }
+    });
+    async function resetAllData() {
+        showLoader("Đang xóa toàn bộ dữ liệu...");
+        try {
+            const collections = ['products', 'transactions', 'categories', 'staff', 'customers'];
+            for (const collectionName of collections) { const snapshot = await db.collection(collectionName).get(); const batch = db.batch(); snapshot.docs.forEach(doc => batch.delete(doc.ref)); await batch.commit(); }
+            await db.collection('settings').doc('paymentInfo').delete();
+            showAlert('Đã xóa toàn bộ dữ liệu thành công!', loadInitialData);
+        } catch (error) { hideLoader(); showAlert('Đã xảy ra lỗi trong quá trình xóa dữ liệu: ' + error.message); }
+    }
+
+
+    // --- 7. UTILITY & DROPDOWN FUNCTIONS ---
+    async function createTransaction(type, items, totalRevenue, totalCost, totalProfit, staffName = '', customerName = '', transactionId = '', customerPhone = '') {
+        const transactionData = { type, items, totalRevenue, totalCost, totalProfit, staffName, customerName, transactionId, customerPhone, timestamp: firebase.firestore.FieldValue.serverTimestamp() };
+        await db.collection('transactions').add(transactionData);
+    }
+    
+    function populateCategoryDropdown(selectElementId, includeAllOption = false, selectedValue = '') {
+        const selectEl = document.getElementById(selectElementId);
+        let options = allCategoriesCache.map(c => `<option value="${c.name}" ${c.name === selectedValue ? 'selected' : ''}>${c.name}</option>`).join('');
+        if(includeAllOption) { selectEl.innerHTML = '<option value="">-- Tất cả danh mục --</option>' + options; } 
+        else { selectEl.innerHTML = '<option value="" disabled>-- Chọn danh mục --</option>' + options; }
+        if(!selectedValue && !includeAllOption) { selectEl.selectedIndex = 0; } 
+        else if (selectedValue) { selectEl.value = selectedValue; }
+    }
+    
+    function populateStaffDropdown(selectElementId) {
+        const selectEl = document.getElementById(selectElementId);
+        selectEl.innerHTML = '<option value="" disabled selected>-- Chọn nhân viên --</option>' + allStaffCache.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    }
+
+    // --- 8. GLOBAL EVENT LISTENERS & INITIAL CALLS ---
+    function setupModalClosers() {
+        document.querySelectorAll('.modal .close').forEach(el => { el.onclick = () => { closeModal(el.closest('.modal').id); }; });
+        window.onclick = (event) => {
+            if (event.target.classList.contains('modal')) {
+                if(event.target.id !== 'qr-confirm-modal') { 
+                    const currentAlertIsFormError = activeModal === 'custom-alert-modal';
+                    closeModal(event.target.id); 
+                    // If we just closed a form error alert by clicking outside, restore the previous active modal
+                    if(currentAlertIsFormError){
+                        // This logic is tricky, the simple close is safer. 
+                        // The user can re-engage with the form naturally.
+                    }
+                }
+            }
+        };
+    }
+    
+    setupModalClosers();
+    fetchBankList();
 </script>
+
 </body>
 </html>
