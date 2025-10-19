@@ -11,25 +11,51 @@
             margin: 0;
             padding: 20px;
             background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
         }
 
         .container {
+            width: 100%;
             max-width: 1200px;
-            margin: auto;
             background: #fff;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
+        
+        #auth-container {
+            max-width: 400px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
 
-        #login-button {
-            padding: 10px 20px;
-            background-color: #4285F4;
-            color: white;
-            border: none;
-            border-radius: 5px;
+        .auth-form h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        #register-form {
+            display: none;
+        }
+
+        .form-toggle-link {
+            color: #007bff;
+            text-decoration: underline;
             cursor: pointer;
-            font-size: 16px;
+            display: block;
+            margin-top: 15px;
+            text-align: center;
+        }
+        
+        .error-message {
+            color: red;
+            text-align: center;
+            margin-top: 10px;
         }
 
         #logout-button {
@@ -40,10 +66,12 @@
             border-radius: 5px;
             cursor: pointer;
             font-size: 16px;
-            display: none;
         }
         
         #user-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 20px;
         }
 
@@ -64,12 +92,19 @@
             width: calc(100% - 22px);
             border-radius: 4px;
             border: 1px solid #ccc;
+            box-sizing: border-box;
         }
 
         button {
             background-color: #4CAF50;
             color: white;
             cursor: pointer;
+            border: none;
+        }
+        
+        .action-buttons button {
+             width: auto;
+             margin-right: 5px;
         }
 
         button:hover {
@@ -101,7 +136,6 @@
             width: 100%;
             height: 100%;
             overflow: auto;
-            background-color: rgb(0,0,0);
             background-color: rgba(0,0,0,0.4);
             padding-top: 60px;
         }
@@ -134,17 +168,35 @@
 <body>
 
 <div class="container">
-    <h1>Quản Lý Sản Phẩm</h1>
-    <div id="user-info">
-        <button id="login-button">Đăng nhập với Google</button>
-        <div id="user-profile" style="display: none;">
-            <p>Xin chào, <span id="user-name"></span>!</p>
-            <button id="logout-button">Đăng xuất</button>
-        </div>
+
+    <!-- Giao diện đăng nhập/đăng ký -->
+    <div id="auth-container">
+        <form id="login-form" class="auth-form">
+            <h2>Đăng Nhập</h2>
+            <input type="email" id="login-email" placeholder="Email" required>
+            <input type="password" id="login-password" placeholder="Mật khẩu" required>
+            <button type="submit">Đăng Nhập</button>
+            <p id="login-error" class="error-message"></p>
+            <span id="show-register" class="form-toggle-link">Chưa có tài khoản? Đăng ký</span>
+        </form>
+        <form id="register-form" class="auth-form">
+            <h2>Đăng Ký</h2>
+            <input type="email" id="register-email" placeholder="Email" required>
+            <input type="password" id="register-password" placeholder="Mật khẩu (ít nhất 6 ký tự)" required>
+            <button type="submit">Đăng Ký</button>
+            <p id="register-error" class="error-message"></p>
+            <span id="show-login" class="form-toggle-link">Đã có tài khoản? Đăng nhập</span>
+        </form>
     </div>
 
+    <!-- Ứng dụng chính (ẩn khi chưa đăng nhập) -->
     <div id="app">
-        <!-- Form nhập sản phẩm -->
+        <div id="user-info">
+            <p>Xin chào, <strong id="user-email"></strong>!</p>
+            <button id="logout-button">Đăng xuất</button>
+        </div>
+        <h1>Quản Lý Sản Phẩm</h1>
+        
         <div class="form-container">
             <h2>Thêm/Cập nhật Sản phẩm</h2>
             <form id="product-form">
@@ -164,7 +216,6 @@
             </form>
         </div>
 
-        <!-- Thống kê -->
         <div class="stats-container">
             <h2>Thống Kê</h2>
             <p>Tổng doanh thu: <strong id="total-revenue">0</strong> VND</p>
@@ -172,7 +223,6 @@
             <button id="export-all-data">Xuất File Toàn Bộ Dữ Liệu (CSV)</button>
         </div>
 
-        <!-- Danh sách sản phẩm -->
         <div class="product-list-container">
             <h2>Danh Sách Sản Phẩm</h2>
             <input type="text" id="search-input" placeholder="Tìm kiếm sản phẩm...">
@@ -188,9 +238,7 @@
                         <th>Hành động</th>
                     </tr>
                 </thead>
-                <tbody id="product-list">
-                    <!-- Dữ liệu sẽ được chèn vào đây -->
-                </tbody>
+                <tbody id="product-list"></tbody>
             </table>
         </div>
     </div>
@@ -232,13 +280,13 @@
     const productsCollection = db.collection('products');
     const transactionsCollection = db.collection('transactions');
 
-    // Các biến toàn cục
-    const loginButton = document.getElementById('login-button');
-    const logoutButton = document.getElementById('logout-button');
-    const userInfoDiv = document.getElementById('user-info');
-    const userProfileDiv = document.getElementById('user-profile');
-    const userNameSpan = document.getElementById('user-name');
+    // DOM Elements
+    const authContainer = document.getElementById('auth-container');
     const appDiv = document.getElementById('app');
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+    const logoutButton = document.getElementById('logout-button');
+    const userEmailSpan = document.getElementById('user-email');
     const productForm = document.getElementById('product-form');
     const productList = document.getElementById('product-list');
     const totalRevenueEl = document.getElementById('total-revenue');
@@ -247,46 +295,104 @@
     const closeModal = document.querySelector('.close');
     let currentExportProductId = null;
 
+    // Quản lý chuyển đổi form
+    document.getElementById('show-register').addEventListener('click', () => {
+        loginForm.style.display = 'none';
+        registerForm.style.display = 'block';
+    });
+
+    document.getElementById('show-login').addEventListener('click', () => {
+        registerForm.style.display = 'none';
+        loginForm.style.display = 'block';
+    });
+
     // Quản lý xác thực
     auth.onAuthStateChanged(user => {
         if (user) {
             // Người dùng đã đăng nhập
-            userNameSpan.textContent = user.displayName;
-            userProfileDiv.style.display = 'block';
-            loginButton.style.display = 'none';
-            logoutButton.style.display = 'inline-block';
+            authContainer.style.display = 'none';
             appDiv.style.display = 'block';
+            userEmailSpan.textContent = user.email;
             loadProducts();
             loadStats();
         } else {
             // Người dùng chưa đăng nhập
-            userProfileDiv.style.display = 'none';
-            loginButton.style.display = 'block';
-            logoutButton.style.display = 'none';
+            authContainer.style.display = 'block';
             appDiv.style.display = 'none';
         }
     });
 
-    loginButton.addEventListener('click', () => {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithPopup(provider).catch(error => console.error("Lỗi đăng nhập:", error));
+    // Xử lý đăng ký
+    registerForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = document.getElementById('register-email').value;
+        const password = document.getElementById('register-password').value;
+        const errorEl = document.getElementById('register-error');
+
+        auth.createUserWithEmailAndPassword(email, password)
+            .then(userCredential => {
+                console.log('Đăng ký thành công:', userCredential.user);
+                registerForm.reset();
+                errorEl.textContent = '';
+            })
+            .catch(error => {
+                switch (error.code) {
+                    case 'auth/email-already-in-use':
+                        errorEl.textContent = 'Email này đã được sử dụng.';
+                        break;
+                    case 'auth/invalid-email':
+                        errorEl.textContent = 'Địa chỉ email không hợp lệ.';
+                        break;
+                    case 'auth/weak-password':
+                        errorEl.textContent = 'Mật khẩu phải có ít nhất 6 ký tự.';
+                        break;
+                    default:
+                        errorEl.textContent = 'Đã xảy ra lỗi khi đăng ký.';
+                }
+            });
     });
 
+    // Xử lý đăng nhập
+    loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+        const errorEl = document.getElementById('login-error');
+
+        auth.signInWithEmailAndPassword(email, password)
+            .then(userCredential => {
+                console.log('Đăng nhập thành công:', userCredential.user);
+                loginForm.reset();
+                errorEl.textContent = '';
+            })
+            .catch(error => {
+                 switch (error.code) {
+                    case 'auth/user-not-found':
+                    case 'auth/wrong-password':
+                    case 'auth/invalid-credential':
+                        errorEl.textContent = 'Email hoặc mật khẩu không đúng.';
+                        break;
+                    default:
+                        errorEl.textContent = 'Đã xảy ra lỗi khi đăng nhập.';
+                }
+            });
+    });
+
+    // Xử lý đăng xuất
     logoutButton.addEventListener('click', () => {
         auth.signOut();
     });
     
     // Quản lý danh mục
     document.getElementById('product-category').addEventListener('change', function() {
-        if (this.value === 'Other') {
+        if (this.value === 'Other') { // Giả sử có một lựa chọn 'Other' để thêm danh mục tùy chỉnh
             document.getElementById('custom-category').style.display = 'block';
         } else {
             document.getElementById('custom-category').style.display = 'none';
         }
     });
 
-
-    // CRUD sản phẩm
+    // CRUD sản phẩm (Code từ đây trở xuống giữ nguyên không thay đổi)
     productForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const id = document.getElementById('product-id').value;
@@ -302,14 +408,13 @@
         }
 
         if (id) {
-            // Cập nhật sản phẩm
             await productsCollection.doc(id).update({ name, code, importPrice, sellPrice, category });
         } else {
-            // Thêm sản phẩm mới (mặc định tồn kho là 0 khi mới thêm)
             await productsCollection.add({ name, code, importPrice, sellPrice, category, inventory: 0 });
         }
         productForm.reset();
         document.getElementById('product-id').value = '';
+        document.getElementById('custom-category').style.display = 'none';
         loadProducts();
     });
 
@@ -326,7 +431,7 @@
                     <td>${product.sellPrice.toLocaleString('vi-VN')}</td>
                     <td>${product.category}</td>
                     <td>${product.inventory}</td>
-                    <td>
+                    <td class="action-buttons">
                         <button onclick="editProduct('${doc.id}')">Sửa</button>
                         <button onclick="openExportModal('${doc.id}', '${product.name}', ${product.inventory})">Xuất</button>
                         <button onclick="deleteProduct('${doc.id}')">Xóa</button>
@@ -346,16 +451,17 @@
         document.getElementById('import-price').value = product.importPrice;
         document.getElementById('sell-price').value = product.sellPrice;
         document.getElementById('product-category').value = product.category;
+        window.scrollTo(0, 0); // Cuộn lên đầu trang để dễ chỉnh sửa
     };
 
     window.deleteProduct = async (id) => {
         if (confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) {
             await productsCollection.doc(id).delete();
             loadProducts();
+            loadStats();
         }
     };
     
-    // Tìm kiếm sản phẩm
     document.getElementById('search-input').addEventListener('keyup', async function() {
         const searchTerm = this.value.toLowerCase();
         const snapshot = await productsCollection.orderBy('name').get();
@@ -371,7 +477,7 @@
                         <td>${product.sellPrice.toLocaleString('vi-VN')}</td>
                         <td>${product.category}</td>
                         <td>${product.inventory}</td>
-                        <td>
+                        <td class="action-buttons">
                             <button onclick="editProduct('${doc.id}')">Sửa</button>
                             <button onclick="openExportModal('${doc.id}', '${product.name}', ${product.inventory})">Xuất</button>
                             <button onclick="deleteProduct('${doc.id}')">Xóa</button>
@@ -383,7 +489,6 @@
         productList.innerHTML = html;
     });
 
-    // Quản lý xuất hàng
     window.openExportModal = (id, name, inventory) => {
         currentExportProductId = id;
         document.getElementById('export-product-name').textContent = name;
@@ -393,10 +498,7 @@
         exportModal.style.display = 'block';
     };
 
-    closeModal.onclick = () => {
-        exportModal.style.display = 'none';
-    };
-
+    closeModal.onclick = () => { exportModal.style.display = 'none'; };
     window.onclick = (event) => {
         if (event.target == exportModal) {
             exportModal.style.display = 'none';
@@ -408,23 +510,18 @@
         const currentInventory = parseInt(document.getElementById('export-product-inventory').textContent);
 
         if (isNaN(quantity) || quantity <= 0) {
-            alert('Số lượng xuất không hợp lệ.');
-            return;
+            alert('Số lượng xuất không hợp lệ.'); return;
         }
-
         if (quantity > currentInventory) {
-            alert('Số lượng xuất vượt quá tồn kho.');
-            return;
+            alert('Số lượng xuất vượt quá tồn kho.'); return;
         }
 
         const productRef = productsCollection.doc(currentExportProductId);
         const productDoc = await productRef.get();
         const product = productDoc.data();
 
-        const newInventory = product.inventory - quantity;
-        await productRef.update({ inventory: newInventory });
+        await productRef.update({ inventory: firebase.firestore.FieldValue.increment(-quantity) });
 
-        // Ghi lại giao dịch
         const revenue = quantity * product.sellPrice;
         await transactionsCollection.add({
             productId: currentExportProductId,
@@ -440,9 +537,7 @@
         loadStats();
     });
     
-    // Thống kê
     async function loadStats() {
-        // Tính tổng doanh thu
         const transSnapshot = await transactionsCollection.get();
         let totalRevenue = 0;
         transSnapshot.forEach(doc => {
@@ -450,7 +545,6 @@
         });
         totalRevenueEl.textContent = totalRevenue.toLocaleString('vi-VN');
 
-        // Tính tổng tồn kho
         const prodSnapshot = await productsCollection.get();
         let totalInventory = 0;
         prodSnapshot.forEach(doc => {
@@ -459,26 +553,24 @@
         totalInventoryEl.textContent = totalInventory;
     }
     
-    // Xuất file CSV
     document.getElementById('export-all-data').addEventListener('click', async () => {
         let csvContent = "data:text/csv;charset=utf-8,";
-        csvContent += "Tên sản phẩm,Mã hàng,Giá nhập,Giá bán,Danh mục,Tồn kho\r\n";
+        csvContent += "Ten san pham,Ma hang,Gia nhap,Gia ban,Danh muc,Ton kho\r\n";
         
         const productsSnapshot = await productsCollection.get();
         productsSnapshot.forEach(doc => {
             const p = doc.data();
-            const row = [p.name, p.code, p.importPrice, p.sellPrice, p.category, p.inventory].join(",");
+            const row = [`"${p.name}"`, `"${p.code}"`, p.importPrice, p.sellPrice, `"${p.category}"`, p.inventory].join(",");
             csvContent += row + "\r\n";
         });
 
-        // Thêm dữ liệu giao dịch
-        csvContent += "\r\nLịch sử giao dịch\r\n";
-        csvContent += "Tên sản phẩm,Số lượng xuất,Doanh thu,Thời gian\r\n";
+        csvContent += "\r\nLich su giao dich\r\n";
+        csvContent += "Ten san pham,So luong xuat,Doanh thu,Thoi gian\r\n";
         const transactionsSnapshot = await transactionsCollection.orderBy('timestamp', 'desc').get();
         transactionsSnapshot.forEach(doc => {
             const t = doc.data();
             const timestamp = t.timestamp ? new Date(t.timestamp.toDate()).toLocaleString('vi-VN') : 'N/A';
-            const row = [t.productName, t.quantity, t.revenue, `"${timestamp}"`].join(",");
+            const row = [`"${t.productName}"`, t.quantity, t.revenue, `"${timestamp}"`].join(",");
             csvContent += row + "\r\n";
         });
 
@@ -490,7 +582,6 @@
         link.click();
         document.body.removeChild(link);
     });
-
 </script>
 
 </body>
