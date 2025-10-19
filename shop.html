@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trang Quản Lý Sản Phẩm</title>
+    <style>
+        /* CSS styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #login-button {
+            padding: 10px 20px;
+            background-color: #4285F4;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #logout-button {
+            padding: 10px 20px;
+            background-color: #db4437;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            display: none;
+        }
+        
+        #user-info {
+            margin-bottom: 20px;
+        }
+
+        #app {
+            display: none;
+        }
+
+        .form-container, .stats-container, .product-list-container {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        input, select, button {
+            padding: 10px;
+            margin: 5px 0;
+            width: calc(100% - 22px);
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+            padding-top: 60px;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 8px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Quản Lý Sản Phẩm</h1>
+    <div id="user-info">
+        <button id="login-button">Đăng nhập với Google</button>
+        <div id="user-profile" style="display: none;">
+            <p>Xin chào, <span id="user-name"></span>!</p>
+            <button id="logout-button">Đăng xuất</button>
+        </div>
+    </div>
+
+    <div id="app">
+        <!-- Form nhập sản phẩm -->
+        <div class="form-container">
+            <h2>Thêm/Cập nhật Sản phẩm</h2>
+            <form id="product-form">
+                <input type="hidden" id="product-id">
+                <input type="text" id="product-name" placeholder="Tên sản phẩm" required>
+                <input type="text" id="product-code" placeholder="Mã hàng" required>
+                <input type="number" id="import-price" placeholder="Giá nhập" required>
+                <input type="number" id="sell-price" placeholder="Giá bán" required>
+                <select id="product-category" required>
+                    <option value="Giày">Giày</option>
+                    <option value="Quần áo">Quần áo</option>
+                    <option value="Phụ kiện">Phụ kiện</option>
+                    <option value="MESUT">MESUT (Đối tác)</option>
+                </select>
+                <input type="text" id="custom-category" placeholder="Thêm danh mục riêng">
+                <button type="submit">Lưu Sản Phẩm</button>
+            </form>
+        </div>
+
+        <!-- Thống kê -->
+        <div class="stats-container">
+            <h2>Thống Kê</h2>
+            <p>Tổng doanh thu: <strong id="total-revenue">0</strong> VND</p>
+            <p>Tổng số lượng tồn kho: <strong id="total-inventory">0</strong></p>
+            <button id="export-all-data">Xuất File Toàn Bộ Dữ Liệu (CSV)</button>
+        </div>
+
+        <!-- Danh sách sản phẩm -->
+        <div class="product-list-container">
+            <h2>Danh Sách Sản Phẩm</h2>
+            <input type="text" id="search-input" placeholder="Tìm kiếm sản phẩm...">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tên sản phẩm</th>
+                        <th>Mã hàng</th>
+                        <th>Giá nhập</th>
+                        <th>Giá bán</th>
+                        <th>Danh mục</th>
+                        <th>Tồn kho</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody id="product-list">
+                    <!-- Dữ liệu sẽ được chèn vào đây -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal xác nhận xuất hàng -->
+<div id="export-modal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Xác nhận xuất sản phẩm</h2>
+        <p>Sản phẩm: <strong id="export-product-name"></strong></p>
+        <p>Tồn kho hiện tại: <strong id="export-product-inventory"></strong></p>
+        <input type="number" id="export-quantity" placeholder="Nhập số lượng xuất" min="1">
+        <button id="confirm-export-button">Xác nhận Xuất</button>
+    </div>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+
+<script>
+    // Cấu hình Firebase của bạn
+    const firebaseConfig = {
+        apiKey: "AIzaSyCHjgJkqVmgpZ6s5HRobpqB6XT--Sa2_zY",
+        authDomain: "tgapp-30a28.firebaseapp.com",
+        projectId: "tgapp-30a28",
+        storageBucket: "tgapp-30a28.firebasestorage.app",
+        messagingSenderId: "329047273664",
+        appId: "1:329047273664:web:c9e1bfe367afb54953fd25",
+        measurementId: "G-68P4PT49B0"
+    };
+
+    // Khởi tạo Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    const productsCollection = db.collection('products');
+    const transactionsCollection = db.collection('transactions');
+
+    // Các biến toàn cục
+    const loginButton = document.getElementById('login-button');
+    const logoutButton = document.getElementById('logout-button');
+    const userInfoDiv = document.getElementById('user-info');
+    const userProfileDiv = document.getElementById('user-profile');
+    const userNameSpan = document.getElementById('user-name');
+    const appDiv = document.getElementById('app');
+    const productForm = document.getElementById('product-form');
+    const productList = document.getElementById('product-list');
+    const totalRevenueEl = document.getElementById('total-revenue');
+    const totalInventoryEl = document.getElementById('total-inventory');
+    const exportModal = document.getElementById('export-modal');
+    const closeModal = document.querySelector('.close');
+    let currentExportProductId = null;
+
+    // Quản lý xác thực
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            // Người dùng đã đăng nhập
+            userNameSpan.textContent = user.displayName;
+            userProfileDiv.style.display = 'block';
+            loginButton.style.display = 'none';
+            logoutButton.style.display = 'inline-block';
+            appDiv.style.display = 'block';
+            loadProducts();
+            loadStats();
+        } else {
+            // Người dùng chưa đăng nhập
+            userProfileDiv.style.display = 'none';
+            loginButton.style.display = 'block';
+            logoutButton.style.display = 'none';
+            appDiv.style.display = 'none';
+        }
+    });
+
+    loginButton.addEventListener('click', () => {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithPopup(provider).catch(error => console.error("Lỗi đăng nhập:", error));
+    });
+
+    logoutButton.addEventListener('click', () => {
+        auth.signOut();
+    });
+    
+    // Quản lý danh mục
+    document.getElementById('product-category').addEventListener('change', function() {
+        if (this.value === 'Other') {
+            document.getElementById('custom-category').style.display = 'block';
+        } else {
+            document.getElementById('custom-category').style.display = 'none';
+        }
+    });
+
+
+    // CRUD sản phẩm
+    productForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('product-id').value;
+        const name = document.getElementById('product-name').value;
+        const code = document.getElementById('product-code').value;
+        const importPrice = parseFloat(document.getElementById('import-price').value);
+        const sellPrice = parseFloat(document.getElementById('sell-price').value);
+        let category = document.getElementById('product-category').value;
+        const customCategory = document.getElementById('custom-category').value;
+        
+        if (customCategory) {
+            category = customCategory;
+        }
+
+        if (id) {
+            // Cập nhật sản phẩm
+            await productsCollection.doc(id).update({ name, code, importPrice, sellPrice, category });
+        } else {
+            // Thêm sản phẩm mới (mặc định tồn kho là 0 khi mới thêm)
+            await productsCollection.add({ name, code, importPrice, sellPrice, category, inventory: 0 });
+        }
+        productForm.reset();
+        document.getElementById('product-id').value = '';
+        loadProducts();
+    });
+
+    async function loadProducts() {
+        const snapshot = await productsCollection.orderBy('name').get();
+        let html = '';
+        snapshot.forEach(doc => {
+            const product = doc.data();
+            html += `
+                <tr>
+                    <td>${product.name}</td>
+                    <td>${product.code}</td>
+                    <td>${product.importPrice.toLocaleString('vi-VN')}</td>
+                    <td>${product.sellPrice.toLocaleString('vi-VN')}</td>
+                    <td>${product.category}</td>
+                    <td>${product.inventory}</td>
+                    <td>
+                        <button onclick="editProduct('${doc.id}')">Sửa</button>
+                        <button onclick="openExportModal('${doc.id}', '${product.name}', ${product.inventory})">Xuất</button>
+                        <button onclick="deleteProduct('${doc.id}')">Xóa</button>
+                    </td>
+                </tr>
+            `;
+        });
+        productList.innerHTML = html;
+    }
+
+    window.editProduct = async (id) => {
+        const doc = await productsCollection.doc(id).get();
+        const product = doc.data();
+        document.getElementById('product-id').value = id;
+        document.getElementById('product-name').value = product.name;
+        document.getElementById('product-code').value = product.code;
+        document.getElementById('import-price').value = product.importPrice;
+        document.getElementById('sell-price').value = product.sellPrice;
+        document.getElementById('product-category').value = product.category;
+    };
+
+    window.deleteProduct = async (id) => {
+        if (confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) {
+            await productsCollection.doc(id).delete();
+            loadProducts();
+        }
+    };
+    
+    // Tìm kiếm sản phẩm
+    document.getElementById('search-input').addEventListener('keyup', async function() {
+        const searchTerm = this.value.toLowerCase();
+        const snapshot = await productsCollection.orderBy('name').get();
+        let html = '';
+        snapshot.forEach(doc => {
+            const product = doc.data();
+            if (product.name.toLowerCase().includes(searchTerm) || product.code.toLowerCase().includes(searchTerm)) {
+                 html += `
+                    <tr>
+                        <td>${product.name}</td>
+                        <td>${product.code}</td>
+                        <td>${product.importPrice.toLocaleString('vi-VN')}</td>
+                        <td>${product.sellPrice.toLocaleString('vi-VN')}</td>
+                        <td>${product.category}</td>
+                        <td>${product.inventory}</td>
+                        <td>
+                            <button onclick="editProduct('${doc.id}')">Sửa</button>
+                            <button onclick="openExportModal('${doc.id}', '${product.name}', ${product.inventory})">Xuất</button>
+                            <button onclick="deleteProduct('${doc.id}')">Xóa</button>
+                        </td>
+                    </tr>
+                `;
+            }
+        });
+        productList.innerHTML = html;
+    });
+
+    // Quản lý xuất hàng
+    window.openExportModal = (id, name, inventory) => {
+        currentExportProductId = id;
+        document.getElementById('export-product-name').textContent = name;
+        document.getElementById('export-product-inventory').textContent = inventory;
+        document.getElementById('export-quantity').value = '';
+        document.getElementById('export-quantity').max = inventory;
+        exportModal.style.display = 'block';
+    };
+
+    closeModal.onclick = () => {
+        exportModal.style.display = 'none';
+    };
+
+    window.onclick = (event) => {
+        if (event.target == exportModal) {
+            exportModal.style.display = 'none';
+        }
+    };
+
+    document.getElementById('confirm-export-button').addEventListener('click', async () => {
+        const quantity = parseInt(document.getElementById('export-quantity').value);
+        const currentInventory = parseInt(document.getElementById('export-product-inventory').textContent);
+
+        if (isNaN(quantity) || quantity <= 0) {
+            alert('Số lượng xuất không hợp lệ.');
+            return;
+        }
+
+        if (quantity > currentInventory) {
+            alert('Số lượng xuất vượt quá tồn kho.');
+            return;
+        }
+
+        const productRef = productsCollection.doc(currentExportProductId);
+        const productDoc = await productRef.get();
+        const product = productDoc.data();
+
+        const newInventory = product.inventory - quantity;
+        await productRef.update({ inventory: newInventory });
+
+        // Ghi lại giao dịch
+        const revenue = quantity * product.sellPrice;
+        await transactionsCollection.add({
+            productId: currentExportProductId,
+            productName: product.name,
+            quantity,
+            revenue,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        alert('Xuất sản phẩm thành công!');
+        exportModal.style.display = 'none';
+        loadProducts();
+        loadStats();
+    });
+    
+    // Thống kê
+    async function loadStats() {
+        // Tính tổng doanh thu
+        const transSnapshot = await transactionsCollection.get();
+        let totalRevenue = 0;
+        transSnapshot.forEach(doc => {
+            totalRevenue += doc.data().revenue;
+        });
+        totalRevenueEl.textContent = totalRevenue.toLocaleString('vi-VN');
+
+        // Tính tổng tồn kho
+        const prodSnapshot = await productsCollection.get();
+        let totalInventory = 0;
+        prodSnapshot.forEach(doc => {
+            totalInventory += doc.data().inventory;
+        });
+        totalInventoryEl.textContent = totalInventory;
+    }
+    
+    // Xuất file CSV
+    document.getElementById('export-all-data').addEventListener('click', async () => {
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "Tên sản phẩm,Mã hàng,Giá nhập,Giá bán,Danh mục,Tồn kho\r\n";
+        
+        const productsSnapshot = await productsCollection.get();
+        productsSnapshot.forEach(doc => {
+            const p = doc.data();
+            const row = [p.name, p.code, p.importPrice, p.sellPrice, p.category, p.inventory].join(",");
+            csvContent += row + "\r\n";
+        });
+
+        // Thêm dữ liệu giao dịch
+        csvContent += "\r\nLịch sử giao dịch\r\n";
+        csvContent += "Tên sản phẩm,Số lượng xuất,Doanh thu,Thời gian\r\n";
+        const transactionsSnapshot = await transactionsCollection.orderBy('timestamp', 'desc').get();
+        transactionsSnapshot.forEach(doc => {
+            const t = doc.data();
+            const timestamp = t.timestamp ? new Date(t.timestamp.toDate()).toLocaleString('vi-VN') : 'N/A';
+            const row = [t.productName, t.quantity, t.revenue, `"${timestamp}"`].join(",");
+            csvContent += row + "\r\n";
+        });
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "du_lieu_san_pham.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
+
+</script>
+
+</body>
+</html>
